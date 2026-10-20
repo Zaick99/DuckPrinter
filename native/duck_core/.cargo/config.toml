@@ -1,0 +1,4 @@
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+# niente dipendenza da libgcc_s/winpthread a runtime: la DLL resta autosufficiente
+rustflags = ["-C", "target-feature=+crt-static"]

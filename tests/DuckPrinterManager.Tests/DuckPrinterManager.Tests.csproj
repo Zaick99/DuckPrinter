@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DuckPrinterManager.Core\DuckPrinterManager.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\native\duck_core\target\release\libduck_core.so" Condition="Exists('..\..\native\duck_core\target\release\libduck_core.so')" CopyToOutputDirectory="PreserveNewest" Link="libduck_core.so" />
+    <None Include="..\..\native\duck_core\target\release\duck_core.dll" Condition="Exists('..\..\native\duck_core\target\release\duck_core.dll')" CopyToOutputDirectory="PreserveNewest" Link="duck_core.dll" />
+    <None Include="Samples\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,129 @@
+<Window x:Class="DuckPrinterManager.Dialogs.CreateUserDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        Width="560" Height="580" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource FText}" FontSize="12.5">
+  <Window.Resources>
+    <Style x:Key="Dot" TargetType="Border">
+      <Setter Property="Width" Value="8"/>
+      <Setter Property="Height" Value="8"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Margin" Value="3,0"/>
+      <Setter Property="Background" Value="{DynamicResource Separator}"/>
+    </Style>
+    <Style x:Key="Q" TargetType="TextBlock" BasedOn="{StaticResource TxtTitle}">
+      <Setter Property="FontSize" Value="19"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="QSub" TargetType="TextBlock" BasedOn="{StaticResource TxtMuted}">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="TextAlignment" Value="Center"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,4,0,18"/>
+      <Setter Property="MaxWidth" Value="420"/>
+    </Style>
+  </Window.Resources>
+  <Border x:Name="Root" Margin="18" Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource Separator}"
+          BorderThickness="1" CornerRadius="{StaticResource RPanel}" Opacity="0">
+    <Border.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Border.RenderTransform>
+    <Border.RenderTransformOrigin>0.5,0.5</Border.RenderTransformOrigin>
+    <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.35" Color="Black"/></Border.Effect>
+    <Grid x:Name="Host">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+      <!-- testata -->
+      <Grid Margin="22,18,18,0">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="Nuova utenza stampante" FontWeight="SemiBold" Foreground="{DynamicResource Label}" VerticalAlignment="Center"/>
+          <StackPanel x:Name="Dots" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+            <Border Style="{StaticResource Dot}"/><Border Style="{StaticResource Dot}"/><Border Style="{StaticResource Dot}"/>
+          </StackPanel>
+        </StackPanel>
+        <Button Style="{StaticResource Toolbtn}" HorizontalAlignment="Right" ToolTip="Chiudi" Click="OnClose">
+          <TextBlock Text="&#xE711;" Style="{StaticResource Icon}" FontSize="11"/>
+        </Button>
+      </Grid>
+
+      <Grid Grid.Row="1" ClipToBounds="True" Margin="28,8,28,0">
+        <!-- 1. MAC -->
+        <StackPanel x:Name="Step1" VerticalAlignment="Center">
+          <Image Source="/Assets/art/user_new.png" Width="110" Height="110" RenderOptions.BitmapScalingMode="HighQuality"/>
+          <TextBlock Text="Qual e' il MAC della stampante?" Style="{StaticResource Q}" Margin="0,12,0,0"/>
+          <TextBlock Text="Incollalo in qualunque formato: diventa minuscolo e senza separatori mentre scrivi. Sara' anche la password." Style="{StaticResource QSub}"/>
+          <Grid Width="300">
+            <TextBox x:Name="TxtMac" Style="{StaticResource HintMono}" Height="42" FontSize="18" TextAlignment="Center" Tag="001122aabbcc" KeyDown="OnKey"/>
+            <TextBlock x:Name="MacOk" Text="&#xE73E;" Style="{StaticResource Icon}" FontSize="16" Foreground="{DynamicResource Green}" HorizontalAlignment="Right" Margin="0,0,14,0" Opacity="0"/>
+          </Grid>
+          <TextBlock x:Name="TxtMacCount" Style="{StaticResource TxtCaption}" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+        </StackPanel>
+
+        <!-- 2. reparto -->
+        <StackPanel x:Name="Step2" VerticalAlignment="Center" Visibility="Collapsed">
+          <Image Source="/Assets/art/server.png" Width="110" Height="110" RenderOptions.BitmapScalingMode="HighQuality"/>
+          <TextBlock Text="In quale reparto si trova?" Style="{StaticResource Q}" Margin="0,12,0,0"/>
+          <TextBlock x:Name="TxtRepartoHelp" Style="{StaticResource QSub}"/>
+          <TextBox x:Name="TxtDesc" Style="{StaticResource HintField}" Height="40" FontSize="14" Width="380" Tag="scrivi per i suggerimenti" KeyDown="OnKey"/>
+        </StackPanel>
+
+        <!-- 3. conferma -->
+        <StackPanel x:Name="Step3" VerticalAlignment="Center" Visibility="Collapsed">
+          <TextBlock Text="Verra' creata cosi'" Style="{StaticResource Q}"/>
+          <TextBlock x:Name="TxtWhere" Style="{StaticResource QSub}"/>
+          <Border Style="{StaticResource GroupCard}">
+            <StackPanel>
+              <Grid Margin="16,14">
+                <StackPanel>
+                  <TextBlock Text="Nome assegnato" Style="{StaticResource TxtCaption}"/>
+                  <TextBlock x:Name="TxtName" Text="…" FontFamily="{StaticResource FMono}" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                </StackPanel>
+                <Button x:Name="BtnCalc" Style="{StaticResource GhostBtn}" Content="Ricalcola" HorizontalAlignment="Right" VerticalAlignment="Center" Click="OnCalc"/>
+              </Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}" MinHeight="36">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <TextBlock Text="MAC e password" Style="{StaticResource TxtCaption}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="SumMac" Grid.Column="1" FontFamily="{StaticResource FMono}" Foreground="{DynamicResource Label}" VerticalAlignment="Center"/>
+              </Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}" MinHeight="36">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <TextBlock Text="Reparto" Style="{StaticResource TxtCaption}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="SumDesc" Grid.Column="1" Foreground="{DynamicResource Label}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+              </Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}" MinHeight="36" Margin="14,6">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <TextBlock Text="Gruppi" Style="{StaticResource TxtCaption}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="SumGroups" Grid.Column="1" Foreground="{DynamicResource LabelSecondary}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <TextBlock x:Name="TxtProgress" Style="{StaticResource TxtCaption}" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- fatto -->
+        <StackPanel x:Name="Done" VerticalAlignment="Center" Visibility="Collapsed">
+          <Image x:Name="ImgDone" Source="/Assets/art/done.png" Width="130" Height="130" RenderOptions.BitmapScalingMode="HighQuality"/>
+          <TextBlock x:Name="TxtDoneTitle" Style="{StaticResource Q}" Margin="0,12,0,0"/>
+          <TextBlock x:Name="TxtDoneSub" Style="{StaticResource QSub}"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- comandi -->
+      <Grid Grid.Row="2" Margin="22,14,22,20">
+        <Button x:Name="BtnBack" Style="{StaticResource QuietBtn}" Height="34" HorizontalAlignment="Left" Click="OnBack">
+          <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE76B;" Style="{StaticResource Icon}" FontSize="11"/><TextBlock Text="Indietro" Margin="6,0,0,0"/></StackPanel>
+        </Button>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <Button x:Name="BtnShow" Style="{StaticResource QuietBtn}" Height="34" Content="Mostra l'utenza" Margin="0,0,8,0" Visibility="Collapsed" Click="OnShow"/>
+          <Button x:Name="BtnNext" Style="{StaticResource PrimaryBtn}" Height="34" Padding="24,0" Click="OnNext">
+            <StackPanel Orientation="Horizontal"><TextBlock x:Name="TxtNext" Text="Avanti"/><TextBlock x:Name="GlyphNext" Text="&#xE76C;" Style="{StaticResource Icon}" FontSize="11" Margin="7,0,0,0"/></StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

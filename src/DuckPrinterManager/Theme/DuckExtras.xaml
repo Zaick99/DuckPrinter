@@ -1,0 +1,482 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="DuckKit.xaml"/>
+  </ResourceDictionary.MergedDictionaries>
+  <!-- Controlli che il kit Duck non copre (menu, progresso, liste a selezione, icone).
+       Stesse regole del kit: solo DynamicResource sui token, nessun esadecimale. -->
+
+  <FontFamily x:Key="FIcons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+  <Style x:Key="Icon" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FIcons}"/>
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <Style x:Key="FieldLabel" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="11.5"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
+    <Setter Property="Margin" Value="0,10,0,4"/>
+  </Style>
+
+  <Style x:Key="FieldMono" TargetType="TextBox" BasedOn="{StaticResource FieldMulti}">
+    <Setter Property="FontFamily" Value="{StaticResource FMono}"/>
+    <Setter Property="TextWrapping" Value="NoWrap"/>
+    <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+  </Style>
+
+  <Style x:Key="ReadOnlyValue" TargetType="TextBox">
+    <Setter Property="IsReadOnly" Value="True"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="SelectionBrush" Value="{DynamicResource Accent}"/>
+  </Style>
+
+  <!-- ===== Menu contestuale ===== -->
+  <Style TargetType="ContextMenu">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContextMenu">
+          <Border Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource BorderControl}"
+                  BorderThickness="1" CornerRadius="{StaticResource RField}" Padding="4" Margin="0,0,10,10">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="18" ShadowDepth="6" Direction="270" Opacity="0.3" Color="Black"/>
+            </Border.Effect>
+            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="MenuItem">
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <Border x:Name="bd" CornerRadius="{StaticResource RControl}" Padding="10,6" Background="Transparent" MinWidth="200">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="24"/><ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" TextElement.Foreground="{DynamicResource LabelSecondary}"/>
+              <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.4"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="Separator">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Separator">
+          <Rectangle Height="1" Margin="6,4" Fill="{DynamicResource Separator}"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Liste a selezione (gruppi AD, percorsi, suggerimenti) ===== -->
+  <Style x:Key="WellList" TargetType="ListBox">
+    <Setter Property="Background" Value="{DynamicResource BgField}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderControl}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="3"/>
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="ItemContainerStyle" Value="{StaticResource PopupListItem}"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListBox">
+          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{StaticResource RField}"
+                  Padding="{TemplateBinding Padding}">
+            <ScrollViewer Focusable="False"><ItemsPresenter/></ScrollViewer>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Barra di avanzamento sottile ===== -->
+  <Style TargetType="ProgressBar">
+    <Setter Property="Height" Value="4"/>
+    <Setter Property="Foreground" Value="{DynamicResource AccentFill}"/>
+    <Setter Property="Background" Value="{DynamicResource SeparatorSoft}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ProgressBar">
+          <Grid>
+            <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="2"/>
+            <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="2" HorizontalAlignment="Left"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Toggle "chip" per i filtri di livello del log -->
+  <Style x:Key="FilterToggle" TargetType="ToggleButton" BasedOn="{StaticResource ToolToggle}">
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="IsChecked" Value="True"/>
+  </Style>
+
+  <!-- ======================================================================
+       Componenti "Apple": modulo a righe raggruppate, interruttori, campi con
+       segnaposto, sidebar con icone a tessera, riquadri statistici.
+       ====================================================================== -->
+
+  <!-- Titolo di pagina grande, come le app di sistema -->
+  <Style x:Key="PageTitle" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="24"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+  </Style>
+  <Style x:Key="PageSub" TargetType="TextBlock" BasedOn="{StaticResource TxtMuted}">
+    <Setter Property="Margin" Value="0,2,0,0"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <!-- Intestazione di gruppo sopra una card (MAIUSCOLETTO piccolo, fuori dal riquadro) -->
+  <Style x:Key="GroupHeader" TargetType="TextBlock" BasedOn="{StaticResource TxtOverline}">
+    <Setter Property="Margin" Value="14,0,0,6"/>
+  </Style>
+  <Style x:Key="GroupFooter" TargetType="TextBlock" BasedOn="{StaticResource TxtCaption}">
+    <Setter Property="Margin" Value="14,6,14,0"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <!-- Card a righe: niente padding, le righe portano il proprio -->
+  <Style x:Key="GroupCard" TargetType="Border" BasedOn="{StaticResource Card}">
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="ClipToBounds" Value="True"/>
+  </Style>
+  <!-- Riga di modulo: etichetta a sinistra, controllo a destra, altezza minima 44 come iOS/macOS -->
+  <Style x:Key="FormRow" TargetType="Grid">
+    <Setter Property="MinHeight" Value="44"/>
+    <Setter Property="Margin" Value="14,0"/>
+  </Style>
+  <Style x:Key="RowLabel" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin" Value="0,0,16,0"/>
+  </Style>
+  <Style x:Key="RowHint" TargetType="TextBlock" BasedOn="{StaticResource TxtCaption}">
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <!-- Separatore fra righe: rientra a sinistra come nelle liste di sistema -->
+  <Style x:Key="RowSep" TargetType="Rectangle">
+    <Setter Property="Height" Value="1"/>
+    <Setter Property="Margin" Value="14,0,0,0"/>
+    <Setter Property="Fill" Value="{DynamicResource SeparatorSoft}"/>
+  </Style>
+
+  <!-- ===== Campo con segnaposto (Tag) ===== -->
+  <Style x:Key="HintField" TargetType="TextBox">
+    <Setter Property="Height" Value="30"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="CaretBrush" Value="{DynamicResource Accent}"/>
+    <Setter Property="SelectionBrush" Value="{DynamicResource Accent}"/>
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Grid>
+            <Border x:Name="glow" CornerRadius="{StaticResource RContent}" Background="{DynamicResource AccentSoft}" Margin="-3" Opacity="0"/>
+            <Border x:Name="b" CornerRadius="{StaticResource RField}" Background="{DynamicResource BgField}"
+                    BorderBrush="{DynamicResource BorderControl}" BorderThickness="1">
+              <Grid>
+                <TextBlock x:Name="hint" Text="{TemplateBinding Tag}" Foreground="{DynamicResource LabelTertiary}"
+                           Margin="{TemplateBinding Padding}" Padding="2,0,0,0" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                           IsHitTestVisible="False" Visibility="Collapsed" TextTrimming="CharacterEllipsis"
+                           FontFamily="{StaticResource FText}"/>
+                <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+              </Grid>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Text" Value="">
+              <Setter TargetName="hint" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource LabelQuaternary}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+              <Trigger.EnterActions>
+                <BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.16"/></Storyboard></BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/></Storyboard></BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.5"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="HintMono" TargetType="TextBox" BasedOn="{StaticResource HintField}">
+    <Setter Property="FontFamily" Value="{StaticResource FMono}"/>
+  </Style>
+  <!-- Area di testo multilinea (elenchi host) -->
+  <Style x:Key="HintArea" TargetType="TextBox" BasedOn="{StaticResource HintMono}">
+    <Setter Property="Height" Value="Auto"/>
+    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="VerticalContentAlignment" Value="Top"/>
+    <Setter Property="AcceptsReturn" Value="True"/>
+    <Setter Property="TextWrapping" Value="NoWrap"/>
+    <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="FontSize" Value="12.5"/>
+  </Style>
+
+  <!-- Campo di ricerca arrotondato con lente -->
+  <Style x:Key="SearchField" TargetType="TextBox" BasedOn="{StaticResource HintField}">
+    <Setter Property="Padding" Value="30,0,10,0"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Grid>
+            <Border x:Name="glow" CornerRadius="18" Background="{DynamicResource AccentSoft}" Margin="-3" Opacity="0"/>
+            <Border x:Name="b" CornerRadius="16" Background="{DynamicResource BgFieldAlt}" BorderBrush="{DynamicResource SeparatorSoft}" BorderThickness="1">
+              <Grid>
+                <TextBlock Text="&#xE721;" FontFamily="{StaticResource FIcons}" FontSize="12" Foreground="{DynamicResource LabelTertiary}"
+                           VerticalAlignment="Center" HorizontalAlignment="Left" Margin="11,0,0,0" IsHitTestVisible="False"/>
+                <TextBlock x:Name="hint" Text="{TemplateBinding Tag}" Foreground="{DynamicResource LabelTertiary}" Margin="{TemplateBinding Padding}"
+                           Padding="2,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed" TextTrimming="CharacterEllipsis"/>
+                <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Text" Value=""><Setter TargetName="hint" Property="Visibility" Value="Visible"/></Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+              <Setter TargetName="b" Property="Background" Value="{DynamicResource BgField}"/>
+              <Setter TargetName="glow" Property="Opacity" Value="1"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===== Interruttore (CheckBox): testo a sinistra, levetta animata a destra ===== -->
+  <Style x:Key="Switch" TargetType="CheckBox">
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="CheckBox">
+          <Grid Background="Transparent" MinHeight="26">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <ContentPresenter VerticalAlignment="Center" Margin="0,0,12,0" RecognizesAccessKey="True"/>
+            <Border x:Name="track" Grid.Column="1" Width="38" Height="22" CornerRadius="11" Background="{DynamicResource BgPressed}"
+                    VerticalAlignment="Center">
+              <Border x:Name="knob" Width="18" Height="18" CornerRadius="9" Background="{DynamicResource LabelOnAccent}"
+                      HorizontalAlignment="Left" Margin="2,0,0,0">
+                <Border.RenderTransform><TranslateTransform x:Name="kt"/></Border.RenderTransform>
+                <Border.Effect><DropShadowEffect BlurRadius="5" ShadowDepth="1" Direction="270" Opacity="0.3" Color="Black"/></Border.Effect>
+              </Border>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="track" Property="Background" Value="{DynamicResource AccentFill}"/>
+              <Trigger.EnterActions>
+                <BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="kt" Storyboard.TargetProperty="X" To="16" Duration="0:0:0.22">
+                    <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.3"/></DoubleAnimation.EasingFunction>
+                  </DoubleAnimation>
+                </Storyboard></BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="kt" Storyboard.TargetProperty="X" To="0" Duration="0:0:0.22">
+                    <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.3"/></DoubleAnimation.EasingFunction>
+                  </DoubleAnimation>
+                </Storyboard></BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="knob" Property="Width" Value="20"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <!-- Variante "pericolosa": traccia rossa quando attivo -->
+  <Style x:Key="SwitchDanger" TargetType="CheckBox" BasedOn="{StaticResource Switch}">
+    <Style.Triggers>
+      <Trigger Property="IsChecked" Value="True"><Setter Property="Foreground" Value="{DynamicResource Red}"/></Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ===== Sidebar ===== -->
+  <Style x:Key="SideItem" TargetType="Button">
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Height" Value="34"/>
+    <Setter Property="Margin" Value="10,1"/>
+    <Setter Property="Padding" Value="8,0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="bd" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource BgHover}"/></Trigger>
+            <Trigger Property="Tag" Value="Active">
+              <Setter TargetName="bd" Property="Background" Value="Transparent"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <!-- Account nella sidebar: riquadro con bordo sottile che diventa arancio al passaggio del mouse,
+       uniforme su tutti i lati -->
+  <Style x:Key="AccountBtn" TargetType="Button">
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="bd" Background="{DynamicResource BgFieldAlt}" BorderBrush="{DynamicResource SeparatorSoft}"
+                  BorderThickness="1" CornerRadius="10" Padding="9,7">
+            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Tessera colorata dell'icona (come Impostazioni di sistema) -->
+  <Style x:Key="IconTile" TargetType="Border">
+    <Setter Property="Width" Value="24"/>
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="CornerRadius" Value="7"/>
+    <Setter Property="Margin" Value="0,0,10,0"/>
+  </Style>
+  <!-- icona illustrata della sidebar (Assets/nav, make_art.py): stesso ingombro di IconTile -->
+  <Style x:Key="NavArt" TargetType="Image">
+    <Setter Property="Width" Value="28"/>
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="Margin" Value="-2,0,8,0"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>
+  </Style>
+  <Style x:Key="TileGlyph" TargetType="TextBlock" BasedOn="{StaticResource Icon}">
+    <Setter Property="FontSize" Value="12.5"/>
+    <Setter Property="Foreground" Value="{DynamicResource LabelOnAccent}"/>
+    <Setter Property="HorizontalAlignment" Value="Center"/>
+  </Style>
+  <!-- Contatore a pillola (badge) -->
+  <Style x:Key="Badge" TargetType="Border">
+    <Setter Property="CornerRadius" Value="9"/>
+    <Setter Property="MinWidth" Value="20"/>
+    <Setter Property="Height" Value="18"/>
+    <Setter Property="Padding" Value="6,0"/>
+    <Setter Property="Background" Value="{DynamicResource SeparatorSoft}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- ===== Riquadro statistico ===== -->
+  <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
+    <Setter Property="Padding" Value="16,12"/>
+  </Style>
+  <Style x:Key="StatNumber" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="26"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource Label}"/>
+  </Style>
+
+  <!-- Voce di un segmentato con pillola scorrevole (ui:Seg.Slide sul Border contenitore):
+       la voce scelta non ha sfondo proprio, la pillola sta dietro. -->
+  <Style x:Key="SegSlide" TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{DynamicResource LabelSecondary}"/>
+    <Setter Property="FontFamily" Value="{StaticResource FText}"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Height" Value="26"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border Background="Transparent" Padding="14,0">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource Label}"/></Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter Property="Foreground" Value="{DynamicResource AccentText}"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="SegSlideSmall" TargetType="RadioButton" BasedOn="{StaticResource SegSlide}">
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="FontSize" Value="11.5"/>
+  </Style>
+
+  <!-- Segmentato compatto (filtri) -->
+  <Style x:Key="SegSmall" TargetType="RadioButton" BasedOn="{StaticResource SegBtn}">
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="FontSize" Value="11.5"/>
+  </Style>
+</ResourceDictionary>

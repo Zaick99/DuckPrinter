@@ -1,0 +1,67 @@
+<Window x:Class="DuckPrinterManager.Dialogs.LoginDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:DuckPrinterManager.Ui"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        Width="500" Height="600" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource FText}" FontSize="12.5">
+  <Border x:Name="Root" Margin="18" Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource Separator}"
+          BorderThickness="1" CornerRadius="{StaticResource RPanel}" Opacity="0">
+    <Border.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Border.RenderTransform>
+    <Border.RenderTransformOrigin>0.5,0.5</Border.RenderTransformOrigin>
+    <Border.Effect><DropShadowEffect BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.35" Color="Black"/></Border.Effect>
+    <Grid ClipToBounds="True">
+      <!-- 1. modulo -->
+      <Grid x:Name="FormPanel" Margin="28,24,28,22">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel>
+          <Image x:Name="Art" Source="/Assets/art/lock.png" Width="92" Height="92" RenderOptions.BitmapScalingMode="HighQuality"/>
+          <TextBlock Text="Accesso ad Active Directory" Style="{StaticResource TxtTitle}" FontSize="19" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+          <TextBlock Style="{StaticResource TxtMuted}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,4,0,0"
+                     Text="Con permessi sulla OU delle stampanti potrai modificare e creare utenze; altrimenti la pagina MAC Auth resta in sola lettura."/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="0,16,0,0">
+          <TextBlock Text="UTENTE" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+          <TextBox x:Name="TxtUser" Style="{StaticResource HintField}" Height="34" Tag="DOMINIO\utente  oppure  utente@dominio"/>
+          <TextBlock Text="PASSWORD" Style="{StaticResource FieldLabel}"/>
+          <PasswordBox x:Name="TxtPwd" Style="{StaticResource PwdField}" Height="34"/>
+          <TextBlock Text="DOMAIN CONTROLLER" Style="{StaticResource FieldLabel}"/>
+          <ComboBox x:Name="CmbDc" Style="{StaticResource Combo}" Height="32"/>
+          <Border x:Name="ErrBox" Style="{StaticResource ErrorBox}" Margin="0,12,0,0" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE783;" Style="{StaticResource Icon}" Foreground="{DynamicResource Red}" Margin="0,0,8,0" VerticalAlignment="Top"/>
+              <TextBlock x:Name="ErrText" TextWrapping="Wrap" Foreground="{DynamicResource Red}" MaxWidth="360"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+          <Button x:Name="BtnCancel" Style="{StaticResource QuietBtn}" Content="Annulla" Height="34" HorizontalAlignment="Left" IsCancel="True" Click="OnCancel"/>
+          <Button x:Name="BtnOk" Style="{StaticResource PrimaryBtn}" Height="34" Padding="28,0" HorizontalAlignment="Right" IsDefault="True" Click="OnOk">
+            <StackPanel Orientation="Horizontal"><TextBlock Text="Accedi"/><TextBlock Text="&#xE76C;" Style="{StaticResource Icon}" FontSize="11" Margin="7,0,0,0"/></StackPanel>
+          </Button>
+        </Grid>
+      </Grid>
+
+      <!-- 2. verifica in corso -->
+      <StackPanel x:Name="BusyPanel" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" Margin="28">
+        <Grid Width="96" Height="96" HorizontalAlignment="Center">
+          <ui:Spinner Thickness="6"/>
+          <Image Source="/Assets/logo.png" Width="52" Height="52" RenderOptions.BitmapScalingMode="HighQuality"/>
+        </Grid>
+        <TextBlock Text="Accesso in corso" Style="{StaticResource TxtTitle}" FontSize="18" HorizontalAlignment="Center" Margin="0,18,0,0"/>
+        <TextBlock x:Name="BusyText" Style="{StaticResource TxtMuted}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+        <TextBlock x:Name="BusyUser" Style="{StaticResource TxtCaption}" FontFamily="{StaticResource FMono}" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+      </StackPanel>
+
+      <!-- 3. fatto -->
+      <StackPanel x:Name="DonePanel" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" Margin="28">
+        <Grid Width="96" Height="96" HorizontalAlignment="Center">
+          <Ellipse x:Name="DoneCircle" Fill="{DynamicResource GreenSoft}" Stroke="{DynamicResource Green}" StrokeThickness="3"/>
+          <TextBlock x:Name="DoneTick" Text="&#xE73E;" Style="{StaticResource Icon}" FontSize="40" Foreground="{DynamicResource Green}" HorizontalAlignment="Center"/>
+        </Grid>
+        <TextBlock x:Name="DoneTitle" Text="Accesso eseguito" Style="{StaticResource TxtTitle}" FontSize="18" HorizontalAlignment="Center" Margin="0,18,0,0"/>
+        <TextBlock x:Name="DoneText" Style="{StaticResource TxtMuted}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380" Margin="0,4,0,0"/>
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

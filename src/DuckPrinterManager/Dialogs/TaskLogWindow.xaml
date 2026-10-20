@@ -1,0 +1,76 @@
+<Window x:Class="DuckPrinterManager.Dialogs.TaskLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:ui="clr-namespace:DuckPrinterManager.Ui"
+        Width="900" Height="600" MinWidth="640" MinHeight="380" WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" ResizeMode="CanResize" WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource FText}" FontSize="12.5" Icon="/Assets/duck.ico">
+  <shell:WindowChrome.WindowChrome>
+    <shell:WindowChrome CaptionHeight="48" CornerRadius="10" GlassFrameThickness="0" ResizeBorderThickness="6" UseAeroCaptionButtons="False"/>
+  </shell:WindowChrome.WindowChrome>
+  <Border Background="{DynamicResource BgContent}" BorderBrush="{DynamicResource Separator}" BorderThickness="1" CornerRadius="10">
+    <Grid>
+      <Grid.RowDefinitions><RowDefinition Height="48"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <Border Background="{DynamicResource BgToolbarGlass}" CornerRadius="9,9,0,0" BorderBrush="{DynamicResource Separator}" BorderThickness="0,0,0,1">
+        <Grid Margin="14,0,12,0">
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Button Style="{StaticResource TrafficBtn}" Background="{DynamicResource TLClose}" ToolTip="Chiudi" Click="OnClose">
+              <Path Data="M 0,0 L 6,6 M 6,0 L 0,6" Stroke="#5A1416" StrokeThickness="1.2" Stretch="Uniform" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Button>
+            <TextBlock x:Name="TitleText" Style="{StaticResource TxtSub}" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"/>
+            <Border x:Name="StatusChip" Style="{StaticResource Chip}" Margin="10,0,0,0" VerticalAlignment="Center">
+              <TextBlock x:Name="StatusText" Style="{StaticResource TxtCaption}" FontWeight="SemiBold"/>
+            </Border>
+          </StackPanel>
+          <CheckBox x:Name="ChkFollow" Style="{StaticResource Switch}" Content="Segui" IsChecked="True" HorizontalAlignment="Right" VerticalAlignment="Center"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="1" Style="{StaticResource WellBox}" Margin="14,12,14,0">
+        <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+          <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+          <TextBlock Text="Operazione" Style="{StaticResource TxtCaption}" Margin="0,2,12,2"/>
+          <TextBox x:Name="InfoOp" Grid.Column="1" Style="{StaticResource ReadOnlyValue}"/>
+          <TextBlock Grid.Column="2" Text="Creato" Style="{StaticResource TxtCaption}" Margin="16,2,12,2"/>
+          <TextBox x:Name="InfoCreated" Grid.Column="3" Style="{StaticResource ReadOnlyValue}"/>
+          <TextBlock Grid.Row="1" Text="Tentativi" Style="{StaticResource TxtCaption}" Margin="0,2,12,2"/>
+          <TextBox x:Name="InfoCounters" Grid.Row="1" Grid.Column="1" Style="{StaticResource ReadOnlyValue}"/>
+          <TextBlock Grid.Row="1" Grid.Column="2" Text="Prossimo" Style="{StaticResource TxtCaption}" Margin="16,2,12,2"/>
+          <TextBox x:Name="InfoNext" Grid.Row="1" Grid.Column="3" Style="{StaticResource ReadOnlyValue}"/>
+          <TextBlock Grid.Row="2" Text="Ultimo esito" Style="{StaticResource TxtCaption}" Margin="0,2,12,2"/>
+          <TextBox x:Name="InfoLast" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource ReadOnlyValue}"/>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="2" Style="{StaticResource WellBox}" Margin="14,10,14,0" Padding="4">
+        <ListView x:Name="LstLog" Style="{StaticResource FlatListView}" ItemContainerStyle="{StaticResource RowListItem}"
+                  SelectionMode="Extended" FontFamily="{StaticResource FMono}" FontSize="11.5"
+                  VirtualizingPanel.IsVirtualizing="True" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+          <ListView.ItemTemplate>
+            <DataTemplate DataType="{x:Type ui:LogRow}">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Time}" Foreground="{DynamicResource LabelTertiary}" Width="118"/>
+                <TextBlock Text="{Binding Level}" ui:Tok.Foreground="{Binding FgKey}" Width="48" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Msg}" ui:Tok.Foreground="{Binding FgKey}" TextWrapping="NoWrap"/>
+              </StackPanel>
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+      </Border>
+
+      <Grid Grid.Row="3" Margin="14,10,14,12">
+        <StackPanel Orientation="Horizontal">
+          <Button Style="{StaticResource QuietBtn}" Content="Copia" Click="OnCopy" Margin="0,0,8,0"/>
+          <Button Style="{StaticResource QuietBtn}" Content="Salva..." Click="OnSave"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <Button x:Name="BtnCheck" Style="{StaticResource QuietBtn}" Content="Verifica ora" Click="OnCheckNow" Margin="0,0,8,0"/>
+          <Button Style="{StaticResource PrimaryBtn}" Content="Chiudi" Click="OnClose"/>
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

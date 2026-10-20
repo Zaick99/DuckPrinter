@@ -1,0 +1,258 @@
+<UserControl x:Class="DuckPrinterManager.Pages.TasksPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:DuckPrinterManager.Ui">
+  <UserControl.Resources>
+    <Style x:Key="Hdr" TargetType="TextBlock" BasedOn="{StaticResource TxtOverline}">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <!-- riquadro statistico cliccabile (filtra la lista) -->
+    <Style x:Key="TileBtn" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Margin" Value="0,0,12,0"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="bd" Style="{StaticResource StatTile}" RenderTransformOrigin="0.5,0.5">
+              <Border.RenderTransform><TranslateTransform x:Name="lift"/></Border.RenderTransform>
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource LabelQuaternary}"/>
+                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="lift" Storyboard.TargetProperty="Y" To="-3" Duration="0:0:0.25"><DoubleAnimation.EasingFunction><ExponentialEase Exponent="6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="lift" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.5"><DoubleAnimation.EasingFunction><ElasticEase Oscillations="1" Springiness="6" EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
+                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+              </Trigger>
+              <Trigger Property="Tag" Value="Active"><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
+
+  <Grid Margin="28,0,28,16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- intestazione -->
+    <Grid Margin="0,0,0,16">
+      <StackPanel>
+        <TextBlock Text="Task programmati" Style="{StaticResource PageTitle}"/>
+        <TextBlock x:Name="TxtSub" Style="{StaticResource PageSub}"/>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <Button x:Name="BtnCheckAll" Style="{StaticResource QuietBtn}" Margin="0,0,16,0" Click="OnCheckAll" ToolTip="Ricontrolla subito tutti i PC in attesa">
+          <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Verifica tutti ora" Margin="6,0,0,0"/></StackPanel>
+        </Button>
+        <Border Style="{StaticResource WellBox}" Padding="12,4">
+          <CheckBox x:Name="ChkScheduler" Style="{StaticResource Switch}" Content="Scheduler" FontWeight="SemiBold" Click="OnToggleScheduler"/>
+        </Border>
+      </StackPanel>
+    </Grid>
+
+    <!-- numeri -->
+    <Grid Grid.Row="1" Margin="0,0,-12,12">
+      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+      <Button x:Name="TileWait" Style="{StaticResource TileBtn}" Click="OnTile" CommandParameter="2">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{DynamicResource Orange}" VerticalAlignment="Center"/><TextBlock Text="In attesa" Style="{StaticResource TxtCaption}" Margin="7,0,0,0"/></StackPanel>
+          <TextBlock x:Name="StatWait" Text="0" Style="{StaticResource StatNumber}" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Button>
+      <Button x:Name="TileRun" Grid.Column="1" Style="{StaticResource TileBtn}" Click="OnTile" CommandParameter="3">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal"><Ellipse x:Name="RunDot" Width="8" Height="8" Fill="{DynamicResource Blue}" VerticalAlignment="Center"/><TextBlock Text="In corso" Style="{StaticResource TxtCaption}" Margin="7,0,0,0"/></StackPanel>
+          <TextBlock x:Name="StatRun" Text="0" Style="{StaticResource StatNumber}" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Button>
+      <Button x:Name="TileErr" Grid.Column="2" Style="{StaticResource TileBtn}" Click="OnTile" CommandParameter="4">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{DynamicResource Red}" VerticalAlignment="Center"/><TextBlock Text="In errore" Style="{StaticResource TxtCaption}" Margin="7,0,0,0"/></StackPanel>
+          <TextBlock x:Name="StatErr" Text="0" Style="{StaticResource StatNumber}" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Button>
+      <Button x:Name="TilePause" Grid.Column="3" Style="{StaticResource TileBtn}" Click="OnTile" CommandParameter="5">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{DynamicResource Purple}" VerticalAlignment="Center"/><TextBlock Text="In pausa" Style="{StaticResource TxtCaption}" Margin="7,0,0,0"/></StackPanel>
+          <TextBlock x:Name="StatPause" Text="0" Style="{StaticResource StatNumber}" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Button>
+      <Button x:Name="TileDone" Grid.Column="4" Style="{StaticResource TileBtn}" Click="OnTile" CommandParameter="6">
+        <StackPanel>
+          <Grid>
+            <StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{DynamicResource Green}" VerticalAlignment="Center"/><TextBlock Text="Completati" Style="{StaticResource TxtCaption}" Margin="7,0,0,0"/></StackPanel>
+            <TextBlock x:Name="TxtPercent" Style="{StaticResource TxtCaption}" HorizontalAlignment="Right"/>
+          </Grid>
+          <TextBlock x:Name="StatDone" Text="0" Style="{StaticResource StatNumber}" Margin="0,4,0,0"/>
+        </StackPanel>
+      </Button>
+    </Grid>
+
+
+    <!-- avanzamento in tempo reale -->
+    <Border Grid.Row="2" Style="{StaticResource Card}" Padding="18,14" Margin="0,0,0,12" Height="206">
+      <Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="190"/><ColumnDefinition Width="1"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center">
+          <Grid Width="118" Height="118" HorizontalAlignment="Left">
+            <ui:ProgressRing x:Name="Ring"/>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+              <TextBlock x:Name="TxtRingPct" Text="0%" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource Label}" HorizontalAlignment="Center"/>
+              <TextBlock Text="completato" Style="{StaticResource TxtCaption}" HorizontalAlignment="Center"/>
+            </StackPanel>
+          </Grid>
+          <TextBlock x:Name="TxtRingCount" FontWeight="SemiBold" Foreground="{DynamicResource Label}" Margin="2,10,0,0"/>
+          <TextBlock x:Name="TxtEta" Style="{StaticResource TxtCaption}" Margin="2,2,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+        <Rectangle Grid.Column="1" Fill="{DynamicResource SeparatorSoft}" Margin="0,4"/>
+        <Grid Grid.Column="2" Margin="18,0,0,0">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+          <Grid Margin="0,0,0,6">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Text="Andamento della coda" FontWeight="SemiBold" Foreground="{DynamicResource Label}" Margin="0,0,16,0"/>
+              <Rectangle Width="12" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource ChartDone}" VerticalAlignment="Center"/>
+              <TextBlock Text="Completati" Style="{StaticResource TxtCaption}" Margin="5,0,12,0"/>
+              <Rectangle Width="12" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource ChartRun}" VerticalAlignment="Center"/>
+              <TextBlock Text="In corso" Style="{StaticResource TxtCaption}" Margin="5,0,12,0"/>
+              <Rectangle Width="12" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource ChartWait}" VerticalAlignment="Center"/>
+              <TextBlock Text="In coda" Style="{StaticResource TxtCaption}" Margin="5,0,12,0"/>
+              <Rectangle Width="12" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource ChartErr}" VerticalAlignment="Center"/>
+              <TextBlock Text="In errore" Style="{StaticResource TxtCaption}" Margin="5,0,0,0"/>
+            </StackPanel>
+            <Border Style="{StaticResource WellBox}" ui:Seg.Slide="True" Padding="2" HorizontalAlignment="Right">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton Style="{StaticResource SegSlideSmall}" Content="5 min" GroupName="range" Tag="5" Checked="OnRange"/>
+                <RadioButton Style="{StaticResource SegSlideSmall}" Content="30 min" GroupName="range" Tag="30" IsChecked="True" Checked="OnRange"/>
+                <RadioButton Style="{StaticResource SegSlideSmall}" Content="2 ore" GroupName="range" Tag="120" Checked="OnRange"/>
+              </StackPanel>
+            </Border>
+          </Grid>
+          <ui:LiveChart x:Name="Chart" Grid.Row="1"/>
+        </Grid>
+      </Grid>
+    </Border>
+
+    <!-- barra filtri -->
+    <Grid Grid.Row="3" Margin="0,0,0,10">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <Border Style="{StaticResource WellBox}" ui:Seg.Slide="True" Padding="3">
+        <StackPanel x:Name="FilterBar" Orientation="Horizontal">
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="Tutti" GroupName="f" IsChecked="True" Tag="0" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="Attivi" GroupName="f" Tag="1" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="In attesa" GroupName="f" Tag="2" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="In corso" GroupName="f" Tag="3" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="Errori" GroupName="f" Tag="4" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="Pausa" GroupName="f" Tag="5" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="Completati" GroupName="f" Tag="6" Checked="OnFilter"/>
+          <RadioButton Style="{StaticResource SegSlideSmall}" Content="Scaduti" GroupName="f" Tag="7" Checked="OnFilter"/>
+        </StackPanel>
+      </Border>
+      <TextBox x:Name="TxtSearch" Grid.Column="2" Style="{StaticResource SearchField}" Width="230" Height="30" Tag="Cerca PC, stampante, errore" TextChanged="OnFilter"/>
+      <Button x:Name="BtnClear" Grid.Column="3" Style="{StaticResource QuietBtn}" Margin="8,0,0,0" Click="OnClearMenu">
+        <StackPanel Orientation="Horizontal"><TextBlock Text="Svuota"/><TextBlock Text="&#xE70D;" Style="{StaticResource Icon}" FontSize="9" Margin="6,0,0,0"/></StackPanel>
+        <Button.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Elimina completati" Tag="done" Click="OnClear"/>
+            <MenuItem Header="Elimina scaduti" Tag="expired" Click="OnClear"/>
+            <MenuItem Header="Elimina task in errore" Tag="errors" Click="OnClear"/>
+            <MenuItem Header="Rimuovi duplicati" Tag="duplicates" Click="OnClear"/>
+            <Separator/>
+            <MenuItem Header="Svuota tutta la coda" Tag="all" Click="OnClear"/>
+          </ContextMenu>
+        </Button.ContextMenu>
+      </Button>
+    </Grid>
+
+    <!-- lista -->
+    <Border Grid.Row="4" Style="{StaticResource GroupCard}" MinHeight="180">
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Border Background="{DynamicResource BgFieldAlt}" BorderBrush="{DynamicResource SeparatorSoft}" BorderThickness="0,0,0,1" Padding="22,8,30,8">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="118"/><ColumnDefinition Width="140"/><ColumnDefinition Width="104"/>
+              <ColumnDefinition Width="2*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="150"/><ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="STATO" Style="{StaticResource Hdr}"/>
+            <TextBlock Grid.Column="1" Text="PC" Style="{StaticResource Hdr}"/>
+            <TextBlock Grid.Column="2" Text="AZIONE" Style="{StaticResource Hdr}"/>
+            <TextBlock Grid.Column="3" Text="STAMPANTE" Style="{StaticResource Hdr}"/>
+            <TextBlock Grid.Column="4" Text="T · E · OFF" Style="{StaticResource Hdr}" ToolTip="Tentativi · errori · volte trovato spento"/>
+            <TextBlock Grid.Column="5" Text="PROSSIMO" Style="{StaticResource Hdr}"/>
+            <TextBlock Grid.Column="6" Text="ULTIMO ESITO" Style="{StaticResource Hdr}"/>
+          </Grid>
+        </Border>
+        <ListView x:Name="LstTasks" Grid.Row="1" Style="{StaticResource FlatListView}" ItemContainerStyle="{StaticResource RowListItem}"
+                  SelectionMode="Extended" SelectionChanged="OnSelection" MouseDoubleClick="OnDoubleClick" Padding="8,4,8,64"
+                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+          <ListView.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Mostra log" Click="OnShowLog"/>
+              <MenuItem Header="Verifica ora" Click="OnCheckSelected"/>
+              <MenuItem Header="Modifica..." Click="OnEdit"/>
+              <Separator/>
+              <MenuItem Header="Pausa" Click="OnPauseSelected"/>
+              <MenuItem Header="Riprendi" Click="OnResumeSelected"/>
+              <MenuItem Header="Interrompi esecuzione" Click="OnCancelRun"/>
+              <Separator/>
+              <MenuItem Header="Elimina" Click="OnDeleteSelected"/>
+            </ContextMenu>
+          </ListView.ContextMenu>
+          <ListView.ItemTemplate>
+            <DataTemplate DataType="{x:Type ui:TaskRow}">
+              <Grid Height="34">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="118"/><ColumnDefinition Width="140"/><ColumnDefinition Width="104"/>
+                  <ColumnDefinition Width="2*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="150"/><ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+                <Border Style="{Binding ChipStyle}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding StatusText}" Style="{StaticResource TxtCaption}" ui:Tok.Foreground="{Binding StatusFgKey}" FontWeight="SemiBold"/>
+                </Border>
+                <TextBlock Grid.Column="1" Text="{Binding Host}" Foreground="{DynamicResource Label}" FontFamily="{StaticResource FMono}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding ActionGlyph}" Style="{StaticResource Icon}" FontSize="11"/>
+                  <TextBlock Text="{Binding ActionText}" Margin="6,0,0,0"/>
+                </StackPanel>
+                <TextBlock Grid.Column="3" Text="{Binding Label}" Foreground="{DynamicResource Label}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" Margin="0,0,10,0"/>
+                <TextBlock Grid.Column="4" Text="{Binding Counters}" VerticalAlignment="Center" FontFamily="{StaticResource FMono}" FontSize="11"/>
+                <TextBlock Grid.Column="5" Text="{Binding NextText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Grid.Column="6" Text="{Binding LastText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding LastText}"/>
+              </Grid>
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+
+        <StackPanel x:Name="EmptyState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+          <Image Source="/Assets/logo.png" Width="76" Opacity="0.55"/>
+          <TextBlock Text="Nessun task" Style="{StaticResource TxtTitle}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+          <TextBlock Text="Programma un'installazione o una rimozione dalla pagina Deploy." Style="{StaticResource TxtMuted}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- barra della selezione, flottante -->
+        <Border x:Name="SelectionBar" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,14"
+                Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource Separator}" BorderThickness="1" CornerRadius="14"
+                Padding="14,6" Visibility="Collapsed" Opacity="0">
+          <Border.Effect><DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270" Opacity="0.3" Color="Black"/></Border.Effect>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock x:Name="TxtSelection" FontWeight="SemiBold" Foreground="{DynamicResource Label}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+            <Rectangle Width="1" Height="20" Fill="{DynamicResource Separator}" Margin="0,0,8,0"/>
+            <Button Style="{StaticResource Toolbtn}" Click="OnCheckSelected" ToolTip="Verifica ora"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Verifica" Margin="5,0,0,0"/></StackPanel></Button>
+            <Button Style="{StaticResource Toolbtn}" Click="OnPauseSelected" ToolTip="Pausa"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE769;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Pausa" Margin="5,0,0,0"/></StackPanel></Button>
+            <Button Style="{StaticResource Toolbtn}" Click="OnResumeSelected" ToolTip="Riprendi"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE768;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Riprendi" Margin="5,0,0,0"/></StackPanel></Button>
+            <Button Style="{StaticResource Toolbtn}" Click="OnEdit" ToolTip="Modifica"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE70F;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Modifica" Margin="5,0,0,0"/></StackPanel></Button>
+            <Button Style="{StaticResource Toolbtn}" Click="OnShowLog" ToolTip="Log"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE9F9;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Log" Margin="5,0,0,0"/></StackPanel></Button>
+            <Button Style="{StaticResource Toolbtn}" Click="OnCancelRun" ToolTip="Interrompi l'esecuzione"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE71A;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Interrompi" Margin="5,0,0,0"/></StackPanel></Button>
+            <Rectangle Width="1" Height="20" Fill="{DynamicResource Separator}" Margin="8,0"/>
+            <Button Style="{StaticResource Toolbtn}" Click="OnDeleteSelected" ToolTip="Elimina"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE74D;" Style="{StaticResource Icon}" FontSize="12" Foreground="{DynamicResource Red}"/><TextBlock Text="Elimina" Margin="5,0,0,0" Foreground="{DynamicResource Red}"/></StackPanel></Button>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

@@ -1,0 +1,448 @@
+<UserControl x:Class="DuckPrinterManager.Pages.DeployPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:DuckPrinterManager.Ui"
+             AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
+  <UserControl.Resources>
+    <!-- scelta a card grande con illustrazione (passo 1) -->
+    <Style x:Key="ChoiceCard" TargetType="RadioButton">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Width" Value="300"/>
+      <Setter Property="Margin" Value="12"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Grid x:Name="root" RenderTransformOrigin="0.5,0.5">
+              <Grid.RenderTransform><ScaleTransform x:Name="sc"/></Grid.RenderTransform>
+              <Border x:Name="bd" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Separator}" BorderThickness="1.5" CornerRadius="18" Padding="22,24">
+                <Border.Effect><DropShadowEffect x:Name="sh" BlurRadius="0" ShadowDepth="0" Opacity="0" Color="Black" Direction="270"/></Border.Effect>
+                <ContentPresenter/>
+              </Border>
+              <Border x:Name="check" Width="26" Height="26" CornerRadius="13" Background="{DynamicResource AccentFill}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,14,0" Opacity="0">
+                <TextBlock Text="&#xE73E;" FontFamily="{StaticResource FIcons}" FontSize="12" Foreground="{DynamicResource AccentText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource LabelQuaternary}"/>
+                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="sc" Storyboard.TargetProperty="ScaleX" To="1.02" Duration="0:0:0.18"/>
+                  <DoubleAnimation Storyboard.TargetName="sc" Storyboard.TargetProperty="ScaleY" To="1.02" Duration="0:0:0.18"/>
+                  <DoubleAnimation Storyboard.TargetName="sh" Storyboard.TargetProperty="Opacity" To="0.18" Duration="0:0:0.18"/>
+                  <DoubleAnimation Storyboard.TargetName="sh" Storyboard.TargetProperty="BlurRadius" To="22" Duration="0:0:0.18"/>
+                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="sc" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.2"/>
+                  <DoubleAnimation Storyboard.TargetName="sc" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.2"/>
+                  <DoubleAnimation Storyboard.TargetName="sh" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+              </Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}"/>
+                <Trigger.EnterActions><BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="check" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"/>
+                </Storyboard></BeginStoryboard></Trigger.EnterActions>
+                <Trigger.ExitActions><BeginStoryboard><Storyboard>
+                  <DoubleAnimation Storyboard.TargetName="check" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"/>
+                </Storyboard></BeginStoryboard></Trigger.ExitActions>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- modello di stampante nella lista del passo Driver -->
+    <Style x:Key="ModelItem" TargetType="ListBoxItem">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ListBoxItem">
+            <Border x:Name="bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="1.5" CornerRadius="10" Padding="12,8" Margin="0,0,0,4">
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Border x:Name="dot" Width="18" Height="18" CornerRadius="9" BorderThickness="1.5" BorderBrush="{DynamicResource BorderControl}" Margin="0,0,12,0" VerticalAlignment="Center">
+                  <TextBlock x:Name="tick" Text="&#xE73E;" FontFamily="{StaticResource FIcons}" FontSize="10" Foreground="{DynamicResource AccentText}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0"/>
+                </Border>
+                <ContentPresenter Grid.Column="1"/>
+              </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource BgHover}"/></Trigger>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoft}"/>
+                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentBorder}"/>
+                <Setter TargetName="dot" Property="Background" Value="{DynamicResource AccentFill}"/>
+                <Setter TargetName="dot" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter TargetName="tick" Property="Opacity" Value="1"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="StepTitle" TargetType="TextBlock" BasedOn="{StaticResource TxtTitle}">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="StepText" TargetType="TextBlock" BasedOn="{StaticResource TxtMuted}">
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,6,0,0"/>
+      <Setter Property="LineHeight" Value="18"/>
+    </Style>
+    <!-- colonna di sinistra di ogni passo: illustrazione + spiegazione -->
+    <Style x:Key="Aside" TargetType="StackPanel">
+      <Setter Property="Width" Value="300"/>
+      <Setter Property="Margin" Value="0,8,36,0"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+    <Style x:Key="AsideImage" TargetType="Image">
+      <Setter Property="Width" Value="150"/>
+      <Setter Property="Height" Value="150"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="Margin" Value="-8,0,0,14"/>
+      <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>
+    </Style>
+  </UserControl.Resources>
+
+  <Grid Margin="28,0,28,16">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+    <Grid Margin="0,0,0,14">
+      <StackPanel>
+        <TextBlock Text="Deploy stampanti" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="Procedura guidata: scegli l'operazione, i PC e la stampante. I PC spenti restano in coda finche' non si accendono." Style="{StaticResource PageSub}"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- indicatore dei passi (costruito dal codice) -->
+    <Border Grid.Row="1" Style="{StaticResource WellBox}" Padding="14,8" Margin="0,0,0,18" HorizontalAlignment="Left">
+      <StackPanel x:Name="Stepper" Orientation="Horizontal"/>
+    </Border>
+
+    <!-- ===================== passi ===================== -->
+    <Grid Grid.Row="2" x:Name="StepHost" ClipToBounds="True">
+
+      <!-- 1. operazione -->
+      <Grid x:Name="PanelAction">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+          <TextBlock Text="Cosa vuoi fare?" Style="{StaticResource StepTitle}" FontSize="24" HorizontalAlignment="Center"/>
+          <TextBlock Text="Puoi programmare piu' operazioni di fila: sullo stesso PC vengono eseguite nell'ordine in cui le crei." Style="{StaticResource StepText}" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="560"/>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+            <RadioButton x:Name="ChoiceInstall" Style="{StaticResource ChoiceCard}" GroupName="action" IsChecked="True" Checked="OnActionChanged">
+              <StackPanel>
+                <Image Source="/Assets/art/install.png" Width="130" Height="130" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock Text="Installa una stampante" Style="{StaticResource TxtSub}" FontSize="15" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                <TextBlock Text="Driver dall'INF, porta, coda e stampante predefinita (set_prt o Windows)." Style="{StaticResource StepText}" TextAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="ChoiceRemove" Style="{StaticResource ChoiceCard}" GroupName="action" Checked="OnActionChanged">
+              <StackPanel>
+                <Image Source="/Assets/art/remove.png" Width="130" Height="130" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock Text="Rimuovi una stampante" Style="{StaticResource TxtSub}" FontSize="15" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                <TextBlock Text="Toglie le code che puntano a un IP, hostname o FQDN, oppure tutte quelle di rete." Style="{StaticResource StepText}" TextAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- 2. computer -->
+      <Grid x:Name="PanelPcs" Visibility="Collapsed">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel Style="{StaticResource Aside}">
+          <Image Source="/Assets/art/computers.png" Style="{StaticResource AsideImage}"/>
+          <TextBlock Text="Su quali PC?" Style="{StaticResource StepTitle}"/>
+          <TextBlock x:Name="TxtPcsExplain" Style="{StaticResource StepText}"/>
+          <Button x:Name="BtnPaste" Style="{StaticResource SoftBtn}" Height="34" HorizontalAlignment="Left" Margin="0,18,0,0" Click="OnPasteHosts">
+            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE77F;" Style="{StaticResource Icon}" FontSize="12"/><TextBlock Text="Incolla elenco dagli appunti" Margin="7,0,0,0"/></StackPanel>
+          </Button>
+          <Border x:Name="DefLegend" Style="{StaticResource WellBox}" Margin="0,10,0,0" HorizontalAlignment="Left">
+            <TextBlock Style="{StaticResource TxtCaption}">
+              <Run Text="PC0001*" FontFamily="{StaticResource FMono}" FontWeight="Bold" Foreground="{DynamicResource Accent}"/><Run Text=" con predefinita   "/><Run Text="PC0002" FontFamily="{StaticResource FMono}" FontWeight="Bold" Foreground="{DynamicResource Label}"/><Run Text=" senza"/>
+            </TextBlock>
+          </Border>
+          <StackPanel Orientation="Horizontal" Margin="-8,10,0,0">
+            <Button Style="{StaticResource GhostBtn}" Content="Da file..." Click="OnHostsFromFile"/>
+            <Button Style="{StaticResource GhostBtn}" Content="Svuota tutto" Click="OnClearAll"/>
+          </StackPanel>
+        </StackPanel>
+        <Border Grid.Column="1" Style="{StaticResource Card}" Padding="16,14">
+          <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="14"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <!-- in rimozione resta solo questo elenco, a tutta larghezza (ColumnSpan da codice) -->
+            <Grid x:Name="DefColumn">
+              <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+              <Grid Margin="2,0,0,8">
+                <StackPanel Orientation="Horizontal">
+                  <Ellipse x:Name="DefDot" Width="9" Height="9" Fill="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                  <TextBlock x:Name="TxtDefHeader" Text="Con stampante predefinita" FontWeight="SemiBold" Foreground="{DynamicResource Label}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                  <Border Style="{StaticResource Badge}" Background="{DynamicResource AccentSoft}">
+                    <TextBlock x:Name="TxtCountDef" Text="0" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                  <Button Style="{StaticResource Toolbtn}" Height="22" MinWidth="22" Padding="0" Margin="4,0,0,0" ToolTip="Svuota" Click="OnClearDef"><TextBlock Text="&#xE711;" Style="{StaticResource Icon}" FontSize="9"/></Button>
+                </StackPanel>
+              </Grid>
+              <TextBox x:Name="TxtHostsDef" Grid.Row="1" Style="{StaticResource HintArea}" Tag="un PC per riga" TextChanged="OnHostsChanged"/>
+            </Grid>
+            <Grid x:Name="NoDefColumn" Grid.Column="2">
+              <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+              <Grid Margin="2,0,0,8">
+                <StackPanel Orientation="Horizontal">
+                  <Ellipse Width="9" Height="9" Fill="{DynamicResource LabelQuaternary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                  <TextBlock Text="Installazione normale" FontWeight="SemiBold" Foreground="{DynamicResource Label}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                  <Border Style="{StaticResource Badge}">
+                    <TextBlock x:Name="TxtCountNoDef" Text="0" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource LabelSecondary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                  <Button Style="{StaticResource Toolbtn}" Height="22" MinWidth="22" Padding="0" Margin="4,0,0,0" ToolTip="Svuota" Click="OnClearNoDef"><TextBlock Text="&#xE711;" Style="{StaticResource Icon}" FontSize="9"/></Button>
+                </StackPanel>
+              </Grid>
+              <TextBox x:Name="TxtHostsNoDef" Grid.Row="1" Style="{StaticResource HintArea}" Tag="un PC per riga" TextChanged="OnHostsChanged"/>
+            </Grid>
+            <TextBlock x:Name="TxtHostsInfo" Grid.Row="1" Grid.ColumnSpan="3" Style="{StaticResource TxtCaption}" Margin="2,10,2,0" TextWrapping="Wrap"/>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <!-- 3a. driver -->
+      <Grid x:Name="PanelDriver" Visibility="Collapsed">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel Style="{StaticResource Aside}">
+          <Grid x:Name="DropZone" Height="230" Margin="0,0,0,16" AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver" DragEnter="OnDragEnter" DragLeave="OnDragLeave" Background="Transparent">
+            <Rectangle x:Name="DropRect" RadiusX="18" RadiusY="18" StrokeThickness="2" StrokeDashArray="5 4" Stroke="{DynamicResource BorderControl}" Fill="{DynamicResource BgFieldAlt}"/>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+              <Image x:Name="DropImage" Source="/Assets/art/driver.png" Width="96" Height="96" RenderOptions.BitmapScalingMode="HighQuality" RenderTransformOrigin="0.5,0.5">
+                <Image.RenderTransform><ScaleTransform/></Image.RenderTransform>
+              </Image>
+              <TextBlock Text="Trascina qui file .inf" FontWeight="SemiBold" Foreground="{DynamicResource Label}" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+              <TextBlock Text="oppure la cartella del driver" Style="{StaticResource TxtCaption}" HorizontalAlignment="Center"/>
+              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                <Button Style="{StaticResource QuietBtn}" Height="28" Click="OnLoadInf" Content="Scegli INF"/>
+                <Button Style="{StaticResource QuietBtn}" Height="28" Margin="6,0,0,0" Click="OnLoadFolder" Content="Cartella"/>
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+          <TextBlock Text="Quale driver?" Style="{StaticResource StepTitle}"/>
+          <TextBlock x:Name="TxtInfSource" Style="{StaticResource StepText}" Text="Gli INF vengono letti con SetupAPI, lo stesso motore che usa Windows per installarli: codifiche, stringhe localizzate e architetture sono interpretate come farebbe Windows."/>
+        </StackPanel>
+        <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14,12">
+          <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <TextBox x:Name="TxtDriverSearch" Style="{StaticResource SearchField}" Height="32" Tag="Cerca fra i modelli letti dagli INF" TextChanged="OnDriverSearch" Margin="0,0,0,10"/>
+            <ListBox x:Name="LstDrivers" Grid.Row="1" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource ModelItem}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="OnDriverSelected" HorizontalContentAlignment="Stretch">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                      <TextBlock Text="{Binding DriverName}" Foreground="{DynamicResource Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Style="{StaticResource TxtCaption}" TextTrimming="CharacterEllipsis"><Run Text="{Binding Manufacturer, Mode=OneWay}"/> · <Run Text="{Binding InfFile, Mode=OneWay}"/></TextBlock>
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource Chip}" VerticalAlignment="Center" Margin="10,0,0,0">
+                      <TextBlock Text="{Binding Architecture}" Style="{StaticResource TxtCaption}"/>
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel x:Name="DriversEmpty" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+              <TextBlock Text="&#xE8E5;" Style="{StaticResource Icon}" FontSize="30" Foreground="{DynamicResource LabelQuaternary}" HorizontalAlignment="Center"/>
+              <TextBlock Text="Nessun driver caricato" Style="{StaticResource TxtSub}" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+              <TextBlock Text="Trascina un .inf a sinistra o usa i pulsanti." Style="{StaticResource TxtMuted}" HorizontalAlignment="Center"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <!-- 4a. stampante -->
+      <Grid x:Name="PanelPrinter" Visibility="Collapsed">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel Style="{StaticResource Aside}">
+          <!-- anteprima: come apparira' la stampante sui PC -->
+          <Border Style="{StaticResource Card}" Padding="18,18">
+            <StackPanel>
+              <Image Source="/Assets/art/install.png" Width="120" Height="120" RenderOptions.BitmapScalingMode="HighQuality"/>
+              <TextBlock x:Name="TxtPreviewName" Style="{StaticResource TxtSub}" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" Margin="0,12,0,0"/>
+              <TextBlock x:Name="TxtPreviewAddr" Style="{StaticResource TxtCaption}" FontFamily="{StaticResource FMono}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+              <TextBlock x:Name="TxtPreviewDriver" Style="{StaticResource TxtCaption}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            </StackPanel>
+          </Border>
+          <TextBlock Text="Come la chiamiamo?" Style="{StaticResource StepTitle}" Margin="0,18,0,0"/>
+          <TextBlock Style="{StaticResource StepText}" Text="{}{DRIVERNAME} diventa il nome del driver; tutto il resto resta com'e', ad esempio {DRIVERNAME} (PR0042). Anche {IP} e {DATE}."/>
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Text="STAMPANTE" Style="{StaticResource GroupHeader}"/>
+          <Border Style="{StaticResource GroupCard}">
+            <StackPanel>
+              <Grid Style="{StaticResource FormRow}" Margin="14,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <TextBlock Text="Nome" Style="{StaticResource RowLabel}"/>
+                <TextBox x:Name="TxtName" Grid.Column="1" Style="{StaticResource HintMono}" Tag="{}{DRIVERNAME} (PR0042)" TextChanged="OnInputs"/>
+                <TextBlock x:Name="TxtNamePreview" Grid.Row="1" Grid.Column="1" Style="{StaticResource RowHint}" Margin="2,5,0,0" TextTrimming="CharacterEllipsis"/>
+              </Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="110"/><ColumnDefinition Width="280"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <TextBlock Text="Indirizzo" Style="{StaticResource RowLabel}"/>
+                <TextBox x:Name="TxtAddress" Grid.Column="1" Style="{StaticResource HintField}" Tag="10.1.2.3  o  pr0042.example.local" TextChanged="OnInputs"/>
+                <TextBlock Grid.Column="2" Text="IP, hostname o FQDN" Style="{StaticResource RowHint}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+              </Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkDriverOnly" Style="{StaticResource Switch}" Content="Installa solo il driver (nessuna porta, nessuna coda)" VerticalAlignment="Center" Checked="OnInputs" Unchecked="OnInputs"/></Grid>
+            </StackPanel>
+          </Border>
+
+          <TextBlock Text="PREDEFINITA" Style="{StaticResource GroupHeader}" Margin="14,18,0,6"/>
+          <Border Style="{StaticResource GroupCard}">
+            <StackPanel>
+              <Grid Style="{StaticResource FormRow}" Margin="14,10">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Border Style="{StaticResource WellBox}" ui:Seg.Slide="True" Padding="3" HorizontalAlignment="Left">
+                  <StackPanel x:Name="DefaultBar" Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Automatica" GroupName="def" Tag="auto" Checked="OnDefaultMode"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="set_prt" GroupName="def" Tag="setprt" Checked="OnDefaultMode"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Windows" GroupName="def" Tag="windows" Checked="OnDefaultMode"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Entrambe" GroupName="def" Tag="both" Checked="OnDefaultMode"/>
+                  </StackPanel>
+                </Border>
+                <TextBlock x:Name="TxtDefaultHint" Grid.Row="1" Style="{StaticResource RowHint}" Margin="2,8,0,0"/>
+              </Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkSetPrt" Style="{StaticResource Switch}" Content="Rilancia set_prt al termine" VerticalAlignment="Center"/></Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+
+      <!-- 3b. stampante da togliere -->
+      <Grid x:Name="PanelRemove" Visibility="Collapsed">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel Style="{StaticResource Aside}">
+          <Image Source="/Assets/art/remove.png" Style="{StaticResource AsideImage}"/>
+          <TextBlock Text="Quale stampante togliamo?" Style="{StaticResource StepTitle}"/>
+          <TextBlock Style="{StaticResource StepText}" Text="Vengono tolte tutte le code collegate a una porta che punta all'indirizzo indicato, comunque si chiami la porta (IP_x, FQDN, URL IPP...). Il confronto e' esatto: 10.1.1.5 non tocca 10.1.1.50."/>
+        </StackPanel>
+        <StackPanel Grid.Column="1">
+          <TextBlock Text="INDIRIZZO" Style="{StaticResource GroupHeader}"/>
+          <Border Style="{StaticResource GroupCard}">
+            <Grid Style="{StaticResource FormRow}" Margin="14,10">
+              <TextBox x:Name="TxtRemove" Style="{StaticResource HintField}" Height="34" FontSize="13" Tag="IP, hostname o FQDN (piu' valori separati da virgola)" TextChanged="OnRemoveInputs"/>
+            </Grid>
+          </Border>
+          <TextBlock Text="OPZIONI" Style="{StaticResource GroupHeader}" Margin="14,18,0,6"/>
+          <Border Style="{StaticResource GroupCard}">
+            <StackPanel>
+              <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkRemovePorts" Style="{StaticResource Switch}" Content="Togli anche le porte non piu' usate" IsChecked="True" VerticalAlignment="Center"/></Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkRemoveSetPrt" Style="{StaticResource Switch}" Content="Rilancia set_prt al termine" VerticalAlignment="Center"/></Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkRemoveAll" Style="{StaticResource SwitchDanger}" Content="Togli TUTTE le stampanti di rete (locali e PDF restano)" VerticalAlignment="Center" Checked="OnRemoveInputs" Unchecked="OnRemoveInputs"/></Grid>
+            </StackPanel>
+          </Border>
+          <TextBlock x:Name="TxtRemoveWhat" Style="{StaticResource GroupFooter}"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- 5. riepilogo -->
+      <Grid x:Name="PanelSummary" Visibility="Collapsed">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel Style="{StaticResource Aside}">
+          <Image x:Name="ImgSummary" Source="/Assets/art/install.png" Style="{StaticResource AsideImage}" Width="120" Height="120"/>
+          <TextBlock x:Name="TxtSummaryTitle" Style="{StaticResource StepTitle}"/>
+          <TextBlock x:Name="TxtSummaryText" Style="{StaticResource StepText}"/>
+          <!-- con quale account verranno eseguiti i task: senza accesso AD si usa l'utente Windows -->
+          <Border x:Name="AccountNote" Style="{StaticResource NoteBox}" Margin="0,14,0,0">
+            <StackPanel>
+              <TextBlock x:Name="TxtAccountNote" Style="{StaticResource TxtCaption}" TextWrapping="Wrap"/>
+              <Button x:Name="BtnAccountLogin" Style="{StaticResource SoftBtn}" Content="Accedi con un account amministrativo" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnSummaryLogin"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+        <!-- il riepilogo scorre dentro il suo riquadro (elenchi PC anche molto lunghi);
+             le domande finali restano sempre visibili sotto -->
+        <Grid Grid.Column="1">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="90"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <TextBlock Text="RIEPILOGO" Style="{StaticResource GroupHeader}"/>
+          <Border Grid.Row="1" Style="{StaticResource GroupCard}" VerticalAlignment="Top">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel x:Name="SummaryRows"/>
+            </ScrollViewer>
+          </Border>
+
+          <StackPanel x:Name="PreRemoveSection" Grid.Row="2">
+            <TextBlock Text="PRIMA DI INSTALLARE" Style="{StaticResource GroupHeader}" Margin="14,14,0,6"/>
+            <Border Style="{StaticResource GroupCard}">
+              <StackPanel Margin="14,10">
+                <TextBlock Text="Vuoi togliere prima una stampante gia' presente sui PC?" FontWeight="SemiBold" Foreground="{DynamicResource Label}"/>
+                <Border Style="{StaticResource WellBox}" ui:Seg.Slide="True" Padding="3" HorizontalAlignment="Left" Margin="0,8,0,0">
+                  <StackPanel x:Name="PreBar" Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource SegSlide}" Content="No" GroupName="pre" Tag="none" IsChecked="True" Checked="OnPreRemove"/>
+                    <RadioButton x:Name="PreSame" Style="{StaticResource SegSlide}" Content="Quella sulla stessa porta" GroupName="pre" Tag="same" Checked="OnPreRemove"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Un altro indirizzo" GroupName="pre" Tag="other" Checked="OnPreRemove"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Tutte quelle di rete" GroupName="pre" Tag="all" Checked="OnPreRemove"/>
+                  </StackPanel>
+                </Border>
+                <TextBox x:Name="TxtPreOther" Style="{StaticResource HintField}" Margin="0,8,0,0" Visibility="Collapsed"
+                         Tag="IP, hostname o FQDN della stampante da sostituire (piu' valori separati da virgola)"/>
+                <TextBlock x:Name="TxtPreHint" Style="{StaticResource RowHint}" Margin="2,6,0,0"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel Grid.Row="3">
+            <TextBlock Text="QUANDO" Style="{StaticResource GroupHeader}" Margin="14,14,0,6"/>
+            <Border Style="{StaticResource GroupCard}">
+              <Grid Style="{StaticResource FormRow}" Margin="14,8">
+                <Border Style="{StaticResource WellBox}" ui:Seg.Slide="True" Padding="3" HorizontalAlignment="Left">
+                  <StackPanel x:Name="StartBar" Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Subito" GroupName="start" Tag="0" IsChecked="True"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Tra 30 min" GroupName="start" Tag="1"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Tra 1 ora" GroupName="start" Tag="2"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Stasera 20:00" GroupName="start" Tag="3"/>
+                    <RadioButton Style="{StaticResource SegSlide}" Content="Domani 07:00" GroupName="start" Tag="4"/>
+                  </StackPanel>
+                </Border>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Grid>
+
+      <!-- fatto -->
+      <Grid x:Name="PanelDone" Visibility="Collapsed">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+          <Image x:Name="ImgDone" Source="/Assets/art/done.png" Width="170" Height="170" RenderOptions.BitmapScalingMode="HighQuality" RenderTransformOrigin="0.5,0.5">
+            <Image.RenderTransform><ScaleTransform/></Image.RenderTransform>
+          </Image>
+          <TextBlock x:Name="TxtDoneTitle" Style="{StaticResource StepTitle}" FontSize="24" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+          <TextBlock x:Name="TxtDoneText" Style="{StaticResource StepText}" TextAlignment="Center" MaxWidth="560" HorizontalAlignment="Center"/>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
+            <Button Style="{StaticResource QuietBtn}" Height="34" Content="Nuova procedura" Click="OnRestart" Margin="0,0,8,0"/>
+            <Button x:Name="BtnSameOther" Style="{StaticResource QuietBtn}" Height="34" Content="Stessa stampante su altri PC" Click="OnSameOnOthers" Margin="0,0,8,0"/>
+            <Button Style="{StaticResource PrimaryBtn}" Height="34" Content="Apri i task" Click="OnOpenTasks"/>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <!-- ===================== navigazione ===================== -->
+    <Grid x:Name="NavBar" Grid.Row="3" Margin="0,16,0,0">
+      <Button x:Name="BtnBack" Style="{StaticResource QuietBtn}" Height="34" HorizontalAlignment="Left" Click="OnBack">
+        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE76B;" Style="{StaticResource Icon}" FontSize="11"/><TextBlock Text="Indietro" Margin="6,0,0,0"/></StackPanel>
+      </Button>
+      <TextBlock x:Name="TxtStepInfo" Style="{StaticResource TxtCaption}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <Button x:Name="BtnNext" Style="{StaticResource PrimaryBtn}" Height="34" HorizontalAlignment="Right" Click="OnNext">
+        <StackPanel Orientation="Horizontal"><TextBlock x:Name="TxtNext" Text="Avanti"/><TextBlock x:Name="GlyphNext" Text="&#xE76C;" Style="{StaticResource Icon}" FontSize="11" Margin="7,0,0,0"/></StackPanel>
+      </Button>
+    </Grid>
+  </Grid>
+</UserControl>

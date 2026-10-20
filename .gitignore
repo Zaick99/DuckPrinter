@@ -1,0 +1,7 @@
+bin/
+obj/
+target/
+dist/
+*.user
+.vs/
+tests/DuckPrinterManager.Tests/duck_core.dll
