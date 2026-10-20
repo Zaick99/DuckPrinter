@@ -260,6 +260,32 @@ public static class Fx
     }
 
     /// <summary>Pannello flottante che sale/scende con una molla (barra della selezione).</summary>
+    /// <summary>
+    /// Cambio di contenuto che cambia l'altezza di un riquadro (campo che compare, testo piu' lungo):
+    /// <paramref name="change"/> viene applicato subito, poi l'altezza scivola dalla vecchia alla nuova
+    /// invece di saltare. A fine animazione l'altezza torna automatica (FillBehavior.Stop), quindi il
+    /// layout finale e' esattamente quello normale. Interrompibile: riparte dall'altezza di quel momento.
+    /// </summary>
+    public static void AnimateHeight(FrameworkElement box, Action change, int ms = 360)
+    {
+        if (!box.IsLoaded || box.ActualWidth <= 0) { change(); return; }
+        var from = box.ActualHeight;
+        box.BeginAnimation(FrameworkElement.HeightProperty, null);
+        change();
+        var m = box.Margin;
+        box.Measure(new Size(box.ActualWidth + m.Left + m.Right, double.PositiveInfinity));
+        var to = Math.Max(0, box.DesiredSize.Height - m.Top - m.Bottom);
+        if (Math.Abs(to - from) < 0.5) return;
+        box.ClipToBounds = true;
+        var a = Anim(from, to, ms, Smooth());
+        a.FillBehavior = FillBehavior.Stop;
+        box.BeginAnimation(FrameworkElement.HeightProperty, a);
+    }
+
+    /// <summary>Elemento appena comparso o testo appena cambiato: entra in dissolvenza invece di apparire di colpo.</summary>
+    public static void FadeIn(UIElement e, int ms = 260, int delay = 60) =>
+        e.BeginAnimation(UIElement.OpacityProperty, Anim(0, 1, ms, Smooth(), delay));
+
     public static void SlideVisible(FrameworkElement e, bool show, double distance = 30)
     {
         if (show == (e.Visibility == Visibility.Visible && e.Opacity > 0.5)) return;

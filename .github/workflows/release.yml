@@ -1,5 +1,7 @@
 # Compila su Windows, esegue i test e pubblica una release quando cambia <Version> nel csproj.
 # Una release per versione: se il tag vX.Y.Z esiste gia' il workflow si ferma dopo i test.
+# Con "[rebuild-release]" nel messaggio del commit la release della versione corrente (e il suo
+# tag) viene cancellata e ricreata dal commit appena pushato.
 name: Build e release
 
 on:
@@ -32,10 +34,18 @@ jobs:
           $v = ($p.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
           "version=$v" >> $env:GITHUB_OUTPUT
           gh release view "v$v" --repo "${{ github.repository }}" *> $null
-          "exists=$([int]($LASTEXITCODE -eq 0))" >> $env:GITHUB_OUTPUT
+          $exists = $LASTEXITCODE -eq 0
+          if ($exists -and $env:COMMIT_MSG -match '\[rebuild-release\]') {
+            Write-Host "Ricreo v$v: cancello la release e il tag attuali"
+            gh release delete "v$v" --repo "${{ github.repository }}" --cleanup-tag --yes
+            if ($LASTEXITCODE) { throw 'cancellazione della release fallita' }
+            $exists = $false
+          }
+          "exists=$([int]$exists)" >> $env:GITHUB_OUTPUT
           $global:LASTEXITCODE = 0   # "release non trovata" non e' un errore dello step
         env:
           GH_TOKEN: ${{ github.token }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
 
       - name: Core Rust (build + test)
         shell: pwsh
