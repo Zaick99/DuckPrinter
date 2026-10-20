@@ -675,10 +675,19 @@ public partial class DeployPage : UserControl, IPage
         _pre = (string)((RadioButton)sender).Tag;
         // scatta anche durante InitializeComponent (voce preselezionata nel XAML): i controlli
         // dichiarati piu' sotto non esistono ancora
-        if (TxtPreOther is null) return;
-        TxtPreOther.Visibility = _pre == "other" ? Visibility.Visible : Visibility.Collapsed;
-        if (_pre == "other" && IsLoaded) Dispatcher.BeginInvoke(() => TxtPreOther.Focus(), System.Windows.Threading.DispatcherPriority.Input);
-        UpdatePreHint();
+        if (TxtPreOther is null || PreRemoveSection is null) return;
+        var showOther = _pre == "other";
+        var appearing = showOther && TxtPreOther.Visibility != Visibility.Visible;
+        // il riquadro cambia altezza (campo indirizzo, spiegazione di lunghezza diversa): scivola invece di saltare
+        Fx.AnimateHeight(PreRemoveSection, () =>
+        {
+            TxtPreOther.Visibility = showOther ? Visibility.Visible : Visibility.Collapsed;
+            UpdatePreHint();
+        });
+        if (!IsLoaded) return;
+        if (appearing) Fx.FadeIn(TxtPreOther);
+        Fx.FadeIn(TxtPreHint, 300, 90);
+        if (showOther) Dispatcher.BeginInvoke(() => TxtPreOther.Focus(), System.Windows.Threading.DispatcherPriority.Input);
     }
 
     private void UpdatePreHint()
