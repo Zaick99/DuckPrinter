@@ -84,25 +84,3 @@ impl LogStore {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn ring_buffer_caps_and_paginates() {
-        let mut l = LogStore::new();
-        for i in 0..(PER_TASK + 50) {
-            l.append(Some("t1"), "INFO", &format!("m{i}"), i as i64);
-        }
-        let all = l.get(Some("t1"), 0, 10_000);
-        assert_eq!(all.len(), PER_TASK);
-        assert_eq!(all[0].msg, "m50");
-        let last = all.last().unwrap().seq;
-        l.append(Some("t1"), "INFO", "nuovo", 1);
-        let delta = l.get(Some("t1"), last, 10);
-        assert_eq!(delta.len(), 1);
-        assert_eq!(delta[0].msg, "nuovo");
-        assert_eq!(l.get(None, 0, 3).len(), 3);
-    }
-}

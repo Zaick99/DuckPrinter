@@ -34,8 +34,6 @@ core for the task queue and everything held in memory.
 - **Light and dark theme** without a flash on switching, an optional glass window
   with Windows' blur, illustrations in the sidebar, and a duck avatar dressed
   according to the first letter of the user's name.
-- 35 tests: 19 on the Rust core, 16 on .NET, including real calls into the Rust
-  library and real PowerShell runs.
 
 ### Changed
 

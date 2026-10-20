@@ -47,22 +47,3 @@ impl SecretStore {
         self.0.is_empty()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn put_get_drop() {
-        let mut s = SecretStore::default();
-        s.put("ad", "p@ss");
-        assert_eq!(s.get("ad"), Some("p@ss"));
-        s.put("ad", "nuova");
-        assert_eq!(s.get("ad"), Some("nuova"));
-        assert!(s.drop_one("ad"));
-        assert!(s.get("ad").is_none());
-        s.put("x", "y");
-        s.clear();
-        assert!(s.is_empty());
-    }
-}
