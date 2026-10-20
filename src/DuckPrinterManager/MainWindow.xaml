@@ -5,7 +5,7 @@
         Title="Duck Printer Manager" Width="1320" Height="840" MinWidth="1140" MinHeight="720"
         WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize"
         AllowsTransparency="True" UseLayoutRounding="True" SnapsToDevicePixels="True"
-        Background="Transparent" Icon="/Assets/duck.ico"
+        Background="Transparent" Icon="/Assets/printer.ico"
         FontFamily="{StaticResource FText}" FontSize="12.5" TextOptions.TextFormattingMode="Ideal">
   <shell:WindowChrome.WindowChrome>
     <shell:WindowChrome CaptionHeight="46" CornerRadius="12" GlassFrameThickness="0"
