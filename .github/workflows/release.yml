@@ -37,8 +37,11 @@ jobs:
           $exists = $LASTEXITCODE -eq 0
           if ($exists -and $env:COMMIT_MSG -match '\[rebuild-release\]') {
             Write-Host "Ricreo v$v: cancello la release e il tag attuali"
-            gh release delete "v$v" --repo "${{ github.repository }}" --cleanup-tag --yes
-            if ($LASTEXITCODE) { throw 'cancellazione della release fallita' }
+            $out = gh release delete "v$v" --repo "${{ github.repository }}" --yes 2>&1 | Out-String
+            if ($LASTEXITCODE) { Write-Host "::error::cancellazione release v${v}: $($out.Trim())"; exit 1 }
+            # il tag a parte: se e' protetto (release immutabili) lo si segnala ma si prosegue
+            $out = gh api -X DELETE "repos/${{ github.repository }}/git/refs/tags/v$v" 2>&1 | Out-String
+            if ($LASTEXITCODE) { Write-Host "::warning::tag v${v} non cancellato: $($out.Trim())" }
             $exists = $false
           }
           "exists=$([int]$exists)" >> $env:GITHUB_OUTPUT
