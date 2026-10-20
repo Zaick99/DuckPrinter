@@ -5,7 +5,7 @@
         xmlns:ui="clr-namespace:DuckPrinterManager.Ui"
         Width="900" Height="600" MinWidth="640" MinHeight="380" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" ResizeMode="CanResize" WindowStartupLocation="CenterOwner"
-        FontFamily="{StaticResource FText}" FontSize="12.5" Icon="/Assets/duck.ico">
+        FontFamily="{StaticResource FText}" FontSize="12.5" Icon="/Assets/printer.ico">
   <shell:WindowChrome.WindowChrome>
     <shell:WindowChrome CaptionHeight="48" CornerRadius="10" GlassFrameThickness="0" ResizeBorderThickness="6" UseAeroCaptionButtons="False"/>
   </shell:WindowChrome.WindowChrome>
