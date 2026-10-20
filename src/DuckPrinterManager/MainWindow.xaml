@@ -1,0 +1,161 @@
+<Window x:Class="DuckPrinterManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Duck Printer Manager" Width="1320" Height="840" MinWidth="1140" MinHeight="720"
+        WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize"
+        AllowsTransparency="True" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        Background="Transparent" Icon="/Assets/duck.ico"
+        FontFamily="{StaticResource FText}" FontSize="12.5" TextOptions.TextFormattingMode="Ideal">
+  <shell:WindowChrome.WindowChrome>
+    <shell:WindowChrome CaptionHeight="46" CornerRadius="12" GlassFrameThickness="0"
+                        ResizeBorderThickness="7" UseAeroCaptionButtons="False"/>
+  </shell:WindowChrome.WindowChrome>
+
+  <Border x:Name="RootBorder" Background="{DynamicResource BgWindow}"
+          BorderBrush="{DynamicResource Separator}" BorderThickness="1" CornerRadius="12">
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="236"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- ===================== sidebar (a tutta altezza, come macOS) ===================== -->
+      <Border Background="{DynamicResource BgSidebarGlass}" BorderBrush="{DynamicResource Separator}" BorderThickness="0,0,1,0" CornerRadius="11,0,0,11">
+        <DockPanel>
+          <!-- semafori -->
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="46" Margin="16,0,0,0">
+            <Button x:Name="BtnClose" Style="{StaticResource TrafficBtn}" Background="{DynamicResource TLClose}" ToolTip="Chiudi" Click="OnClose" VerticalAlignment="Center">
+              <Path Data="M 0,0 L 6,6 M 6,0 L 0,6" Stroke="#5A1416" StrokeThickness="1.2" Stretch="Uniform" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Button>
+            <Button x:Name="BtnMin" Style="{StaticResource TrafficBtn}" Background="{DynamicResource TLMin}" ToolTip="Riduci a icona" Click="OnMin" VerticalAlignment="Center">
+              <Path Data="M 0,3 L 7,3" Stroke="#6B3B00" StrokeThickness="1.2" Stretch="Uniform" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Button>
+            <Button x:Name="BtnMax" Style="{StaticResource TrafficBtn}" Background="{DynamicResource TLZoom}" ToolTip="Ingrandisci" Click="OnMax" VerticalAlignment="Center">
+              <Path Data="M 0,3 L 7,3 M 3.5,0 L 3.5,6.5" Stroke="#063906" StrokeThickness="1.2" Stretch="Uniform" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Button>
+          </StackPanel>
+
+          <!-- marchio -->
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="18,4,12,14">
+            <Image Source="/Assets/logo.png" Width="38" Height="38" RenderOptions.BitmapScalingMode="HighQuality"/>
+            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+              <TextBlock Text="Duck Printer" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Label}"/>
+              <TextBlock Text="Manager" Style="{StaticResource TxtCaption}"/>
+            </StackPanel>
+          </StackPanel>
+
+          <!-- account AD -->
+          <Button x:Name="BtnAccount" DockPanel.Dock="Top" Style="{StaticResource AccountBtn}" Margin="12,0,12,12" Click="OnLogin">
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid>
+                  <Border x:Name="AccountAvatar" Width="32" Height="32" CornerRadius="16" Background="{DynamicResource BgPressed}">
+                    <TextBlock x:Name="AccountInitials" Text="&#xE77B;" Style="{StaticResource Icon}" HorizontalAlignment="Center" Foreground="{DynamicResource LabelSecondary}"/>
+                  </Border>
+                  <!-- papera vestita in base alla prima lettera del nome (Assets/avatars, make_avatars.py) -->
+                  <Image x:Name="AccountDuck" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality" Visibility="Collapsed"/>
+                </Grid>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                  <TextBlock x:Name="AccountName" Text="Accedi" FontWeight="SemiBold" Foreground="{DynamicResource Label}" TextTrimming="CharacterEllipsis"/>
+                  <TextBlock x:Name="AccountSub" Text="Active Directory" Style="{StaticResource TxtCaption}" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+                <Ellipse x:Name="AccountDot" Grid.Column="2" Width="8" Height="8" Fill="{DynamicResource LabelQuaternary}" VerticalAlignment="Center"/>
+              </Grid>
+          </Button>
+
+          <!-- stato scheduler in fondo -->
+          <Border DockPanel.Dock="Bottom" Style="{StaticResource WellBox}" Margin="12,0,12,12" Padding="12,10">
+            <StackPanel>
+              <Grid>
+                <StackPanel Orientation="Horizontal">
+                  <Ellipse x:Name="SchedDot" Width="8" Height="8" Fill="{DynamicResource Green}" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="SchedTitle" Text="Scheduler attivo" FontWeight="SemiBold" FontSize="11.5" Foreground="{DynamicResource Label}" Margin="7,0,0,0"/>
+                </StackPanel>
+                <TextBlock x:Name="SchedPercent" Style="{StaticResource TxtCaption}" HorizontalAlignment="Right"/>
+              </Grid>
+              <ProgressBar x:Name="SchedProgress" Margin="0,8,0,6" Maximum="1"/>
+              <TextBlock x:Name="SchedText" Style="{StaticResource TxtCaption}" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+          <!-- navigazione -->
+          <Grid x:Name="NavArea">
+            <Border x:Name="NavPill" VerticalAlignment="Top" Margin="10,0" CornerRadius="8" Background="{DynamicResource AccentSoft}"
+                    BorderBrush="{DynamicResource AccentBorder}" BorderThickness="1" Opacity="0" IsHitTestVisible="False"/>
+            <StackPanel x:Name="NavList">
+              <TextBlock Text="Stampanti" Style="{StaticResource TxtCaption}" FontWeight="SemiBold" Margin="20,0,0,4"/>
+              <Button x:Name="NavDeploy" Style="{StaticResource SideItem}" Click="OnNav">
+                <StackPanel Orientation="Horizontal">
+                  <Image Source="/Assets/nav/deploy.png" Style="{StaticResource NavArt}"/>
+                  <TextBlock Text="Deploy" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button x:Name="NavTasks" Style="{StaticResource SideItem}" Click="OnNav">
+                <Grid>
+                  <StackPanel Orientation="Horizontal">
+                    <Image Source="/Assets/nav/tasks.png" Style="{StaticResource NavArt}"/>
+                    <TextBlock Text="Task programmati" VerticalAlignment="Center"/>
+                  </StackPanel>
+                  <Border x:Name="TasksBadge" Style="{StaticResource Badge}" HorizontalAlignment="Right" Visibility="Collapsed" Background="{DynamicResource BlueSoft}">
+                    <TextBlock x:Name="TasksBadgeText" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource Blue}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
+              </Button>
+              <TextBlock Text="Rete" Style="{StaticResource TxtCaption}" FontWeight="SemiBold" Margin="20,14,0,4"/>
+              <Button x:Name="NavMac" Style="{StaticResource SideItem}" Click="OnNav">
+                <StackPanel Orientation="Horizontal">
+                  <Image Source="/Assets/nav/mac.png" Style="{StaticResource NavArt}"/>
+                  <TextBlock Text="MAC Auth" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <TextBlock Text="Sistema" Style="{StaticResource TxtCaption}" FontWeight="SemiBold" Margin="20,14,0,4"/>
+              <Button x:Name="NavLog" Style="{StaticResource SideItem}" Click="OnNav">
+                <StackPanel Orientation="Horizontal">
+                  <Image Source="/Assets/nav/log.png" Style="{StaticResource NavArt}"/>
+                  <TextBlock Text="Log" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+              <Button x:Name="NavSettings" Style="{StaticResource SideItem}" Click="OnNav">
+                <StackPanel Orientation="Horizontal">
+                  <Image Source="/Assets/nav/settings.png" Style="{StaticResource NavArt}"/>
+                  <TextBlock Text="Impostazioni" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </DockPanel>
+      </Border>
+
+      <!-- ===================== contenuto ===================== -->
+      <Grid Grid.Column="1">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="46"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="26"/>
+        </Grid.RowDefinitions>
+        <Canvas x:Name="DuckLayer" Grid.RowSpan="3" ClipToBounds="True" IsHitTestVisible="False" Background="Transparent"/>
+
+        <!-- barra del titolo: area di trascinamento + tema -->
+        <Grid Margin="0,0,12,0">
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <TextBlock x:Name="StatusRight" Style="{StaticResource TxtCaption}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <Button x:Name="BtnTheme" Style="{StaticResource Toolbtn}" ToolTip="Aspetto chiaro / scuro (clic destro: segui Windows)"
+                    Click="OnTheme" MouseRightButtonUp="OnThemeSystem">
+              <Path x:Name="ThemeGlyph" Width="14" Height="14" Stretch="Uniform"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <ContentControl x:Name="PageHost" Grid.Row="1" Focusable="False"/>
+
+        <Border Grid.Row="2" BorderBrush="{DynamicResource SeparatorSoft}" BorderThickness="0,1,0,0">
+          <TextBlock x:Name="StatusText" Style="{StaticResource TxtCaption}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="22,0"/>
+        </Border>
+
+        <!-- notifiche -->
+        <StackPanel x:Name="ToastHost" Grid.RowSpan="3" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,52,18,0"/>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

@@ -1,0 +1,56 @@
+<Window x:Class="DuckPrinterManager.Dialogs.TaskEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        SizeToContent="Height" Width="560" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource FText}" FontSize="12.5">
+  <Border x:Name="Root" Margin="18" Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource Separator}"
+          BorderThickness="1" CornerRadius="{StaticResource RPanel}" Opacity="0">
+    <Border.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Border.RenderTransform>
+    <Border.RenderTransformOrigin>0.5,0.5</Border.RenderTransformOrigin>
+    <Border.Effect><DropShadowEffect BlurRadius="28" ShadowDepth="8" Direction="270" Opacity="0.35" Color="Black"/></Border.Effect>
+    <StackPanel Margin="24,20,24,18">
+      <TextBlock x:Name="TitleText" Style="{StaticResource TxtSub}"/>
+      <TextBlock x:Name="SubText" Style="{StaticResource TxtCaption}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+
+      <TextBlock Text="PC" Style="{StaticResource FieldLabel}"/>
+      <TextBox x:Name="TxtHost" Style="{StaticResource Field}"/>
+
+      <StackPanel x:Name="DeployPanel">
+        <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Text="NOME STAMPANTE" Style="{StaticResource FieldLabel}"/>
+            <TextBox x:Name="TxtPrinter" Style="{StaticResource Field}"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <TextBlock Text="INDIRIZZO STAMPANTE" Style="{StaticResource FieldLabel}"/>
+            <TextBox x:Name="TxtAddress" Style="{StaticResource Field}"/>
+          </StackPanel>
+        </Grid>
+        <TextBlock Text="STAMPANTE PREDEFINITA" Style="{StaticResource FieldLabel}"/>
+        <ComboBox x:Name="CmbDefault" Style="{StaticResource Combo}" DisplayMemberPath="Label" SelectedValuePath="Key"/>
+        <CheckBox x:Name="ChkDriverOnly" Style="{StaticResource Switch}" Content="Solo driver" Margin="0,10,0,0"/>
+      </StackPanel>
+
+      <StackPanel x:Name="RemovePanel">
+        <TextBlock Text="INDIRIZZI DA RIMUOVERE" Style="{StaticResource FieldLabel}"/>
+        <TextBox x:Name="TxtTargets" Style="{StaticResource Field}"/>
+        <CheckBox x:Name="ChkRemoveAll" Style="{StaticResource Switch}" Content="Rimuovi tutte le stampanti di rete" Margin="0,10,0,0"/>
+        <CheckBox x:Name="ChkRemovePorts" Style="{StaticResource Switch}" Content="Rimuovi anche le porte" Margin="0,6,0,0"/>
+      </StackPanel>
+
+      <CheckBox x:Name="ChkSetPrt" Style="{StaticResource Switch}" Content="Rilancia set_prt al termine" Margin="0,6,0,0"/>
+      <CheckBox x:Name="ChkNow" Style="{StaticResource Switch}" Content="Esegui al prossimo giro dello scheduler (ignora l'attesa)" Margin="0,6,0,0" IsChecked="True"/>
+      <CheckBox x:Name="ChkReopen" Style="{StaticResource Switch}" Content="Riapri il task (e' gia' concluso)" Margin="0,6,0,0" Visibility="Collapsed"/>
+
+      <Border x:Name="ErrBox" Style="{StaticResource ErrorBox}" Margin="0,12,0,0" Visibility="Collapsed">
+        <TextBlock x:Name="ErrText" TextWrapping="Wrap" Foreground="{DynamicResource Red}"/>
+      </Border>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+        <Button Style="{StaticResource QuietBtn}" Content="Annulla" Margin="0,0,8,0" IsCancel="True" Click="OnCancel"/>
+        <Button Style="{StaticResource PrimaryBtn}" Content="Salva" IsDefault="True" Click="OnSave"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>
