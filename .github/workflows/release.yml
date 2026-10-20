@@ -1,0 +1,84 @@
+# Compila su Windows, esegue i test e pubblica una release quando cambia <Version> nel csproj.
+# Una release per versione: se il tag vX.Y.Z esiste gia' il workflow si ferma dopo i test.
+name: Build e release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Versione
+        id: ver
+        shell: pwsh
+        run: |
+          [xml]$p = Get-Content src/DuckPrinterManager/DuckPrinterManager.csproj
+          $v = ($p.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          "version=$v" >> $env:GITHUB_OUTPUT
+          gh release view "v$v" --repo "${{ github.repository }}" *> $null
+          "exists=$([int]($LASTEXITCODE -eq 0))" >> $env:GITHUB_OUTPUT
+          $global:LASTEXITCODE = 0   # "release non trovata" non e' un errore dello step
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Core Rust (build + test)
+        shell: pwsh
+        run: |
+          cargo build --release --manifest-path native/duck_core/Cargo.toml
+          if ($LASTEXITCODE) { throw 'cargo build fallito' }
+          cargo test --manifest-path native/duck_core/Cargo.toml
+          if ($LASTEXITCODE) { throw 'test Rust falliti' }
+
+      - name: Test .NET
+        shell: pwsh
+        run: |
+          Copy-Item native/duck_core/target/release/duck_core.dll tests/DuckPrinterManager.Tests/ -Force
+          dotnet test tests/DuckPrinterManager.Tests -c Release
+          if ($LASTEXITCODE) { throw 'test .NET falliti' }
+
+      - name: Eseguibile portabile
+        if: steps.ver.outputs.exists == '0'
+        shell: pwsh
+        run: |
+          dotnet publish src/DuckPrinterManager -c Release -o dist --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          if ($LASTEXITCODE) { throw 'publish fallito' }
+          $h = (Get-FileHash dist/DuckPrinterManager.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$h  DuckPrinterManager.exe" | Set-Content -Encoding ascii dist/SHA256SUMS.txt
+          $v = '${{ steps.ver.outputs.version }}'
+          $notes = "docs/release-notes/$v.md"
+          if (-not (Test-Path $notes)) {
+            # ripiego: la sezione della versione nel CHANGELOG
+            $c = Get-Content CHANGELOG.md -Raw
+            $m = [regex]::Match($c, "(?ms)^## \[$([regex]::Escape($v))\][^\n]*\n(.*?)(?=^## \[|^\[)")
+            Set-Content dist/notes.md $m.Groups[1].Value.Trim()
+          } else { Copy-Item $notes dist/notes.md }
+          Add-Content dist/notes.md "`n`nSHA-256 of ``DuckPrinterManager.exe``: ``$h``"
+
+      - name: Release
+        if: steps.ver.outputs.exists == '0'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          gh release create "v$v" dist/DuckPrinterManager.exe dist/SHA256SUMS.txt `
+            --repo "${{ github.repository }}" --target "${{ github.sha }}" `
+            --title "Duck Printer Manager $v" --notes-file dist/notes.md --latest
