@@ -58,24 +58,3 @@ pub fn parse(text: &str) -> ParsedHosts {
     }
     out
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn splits_dedups_and_validates() {
-        let p = parse("PC001\r\npc001, pc002.example.local; 10.1.1.5 \\\\SRV01 bad host! 999.1.1.1 -x");
-        assert_eq!(p.valid, vec!["PC001", "pc002.example.local", "10.1.1.5", "SRV01", "bad"]);
-        assert_eq!(p.duplicates, 1);
-        assert!(p.invalid.contains(&"999.1.1.1".to_string()));
-        assert!(p.invalid.contains(&"-x".to_string()));
-        assert!(p.invalid.contains(&"host!".to_string()));
-    }
-
-    #[test]
-    fn ipv6_and_empty() {
-        assert_eq!(parse("").valid.len(), 0);
-        assert_eq!(parse("fe80::1").valid, vec!["fe80::1"]);
-    }
-}

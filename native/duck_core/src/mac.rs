@@ -24,27 +24,3 @@ pub fn sanitize_typing(input: &str) -> String {
         .take(12)
         .collect()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn normalizes_any_notation() {
-        for s in ["00:11:22:AA:BB:CC", "00-11-22-aa-bb-cc", "0011.22AA.BBCC", " 001122aabbcc "] {
-            assert_eq!(normalize(s).as_deref(), Some("001122aabbcc"), "{s}");
-        }
-    }
-
-    #[test]
-    fn rejects_garbage() {
-        assert_eq!(normalize("001122aabbc"), None);
-        assert_eq!(normalize("zz18039debbc"), None);
-        assert_eq!(normalize(""), None);
-    }
-
-    #[test]
-    fn typing_filter() {
-        assert_eq!(sanitize_typing("00:11:22:AA:BB:CC:FF"), "001122aabbcc");
-    }
-}

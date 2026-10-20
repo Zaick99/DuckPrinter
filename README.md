@@ -13,7 +13,6 @@ that are switched off are retried until they come back. One executable, nothing 
 ![Platform](https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078d4?style=flat-square)
 ![.NET](https://img.shields.io/badge/.NET-8-512bd4?style=flat-square)
 ![Rust](https://img.shields.io/badge/core-Rust-b7410e?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-35%20green-2ea043?style=flat-square)
 [![License](https://img.shields.io/badge/license-MIT-57606a?style=flat-square)](LICENSE)
 
 [**Download**](https://github.com/Zaick99/DuckPrinterManager/releases/latest) ·
@@ -86,7 +85,6 @@ Each part of the job goes to the tool that does it best:
 | Commands on the PCs | PowerShell | PowerShell — the same cmdlets, now in separate scripts with a fixed protocol |
 | Task queue and memory | script variables | a Rust core (`duck_core`): per-PC FIFO, retries, duplicates, log ring buffer, secrets zeroed on removal |
 | Reading drivers | a text parser | **SetupAPI**, the engine Windows itself uses, with the text parser as a fallback |
-| Tests | none that could run headless | 35 (19 Rust, 16 .NET), including real calls into the Rust library and real PowerShell runs |
 
 The configuration file keeps the same keys: an old `duck_config.json` placed next to
 the executable is imported on first start.
@@ -257,21 +255,22 @@ sign out or close the application.
 ## Building
 
 ```powershell
-.\build.ps1                  # Rust core + tests + publish to .\dist
+.\build.ps1                  # Rust core + publish to .\dist
 .\build.ps1 -SelfContained   # with the .NET runtime included
 ```
 
-From Linux: `./build.sh` (Rust target `x86_64-pc-windows-gnu` with mingw, .NET SDK
-with the WindowsDesktop workload). The portable single file:
+Needs the .NET 8 SDK and Rust (`rustup`, MSVC target). The portable single file —
+build the Rust core first, the project picks up `duck_core.dll` on its own:
 
 ```powershell
+cargo build --release --manifest-path native/duck_core/Cargo.toml
 dotnet publish src/DuckPrinterManager -c Release -o dist --self-contained true `
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:EnableCompressionInSingleFile=true -p:DebugType=none
 ```
 
-Tests: `cargo test --manifest-path native/duck_core/Cargo.toml` (19) and
-`dotnet test tests/DuckPrinterManager.Tests` (16).
+Releases are built the same way by GitHub Actions (`.github/workflows/release.yml`)
+when `<Version>` in the project changes.
 
 ---
 
@@ -282,9 +281,9 @@ native/duck_core               Rust: task queue, scheduler state, log, secrets, 
 src/DuckPrinterManager.Core    .NET without UI: P/Invoke, PowerShell runner, SetupAPI reader,
                                AD service, configuration; Scripts/*.ps1 run on the PCs and in AD
 src/DuckPrinterManager         the WPF application: pages, dialogs, theme, animations
-tests/                         19 + 16 tests, including real FFI and real PowerShell runs
-tools/                         make_art.py and make_avatars.py: the illustrations and the avatars
-docs/images/                   the pictures in this page
+assets/                        icon (duck.png, duck.ico) and the logo of this page
+docs/                          the pictures in this page and the release notes
+.github/workflows/release.yml  builds the executable and publishes the release
 ```
 
 ---

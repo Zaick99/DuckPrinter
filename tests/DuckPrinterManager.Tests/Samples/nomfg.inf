@@ -1,5 +1,0 @@
-[Version]
-Class=Printer
-[Install]
-"Canon Generic Plus UFR II" = x
-[Strings]

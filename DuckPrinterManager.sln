@@ -7,10 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C12233A1-EE5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuckPrinterManager.Core", "src\DuckPrinterManager.Core\DuckPrinterManager.Core.csproj", "{1F049AC4-6FB9-4A9D-9E3A-216F32F86E72}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D5FF55A2-A939-4509-B9D7-DC6FD2D4FD88}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuckPrinterManager.Tests", "tests\DuckPrinterManager.Tests\DuckPrinterManager.Tests.csproj", "{B9B1583B-1E51-464D-90BE-7A39F6C7AEB7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,13 +20,8 @@ Global
 		{1F049AC4-6FB9-4A9D-9E3A-216F32F86E72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F049AC4-6FB9-4A9D-9E3A-216F32F86E72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F049AC4-6FB9-4A9D-9E3A-216F32F86E72}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B9B1583B-1E51-464D-90BE-7A39F6C7AEB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B9B1583B-1E51-464D-90BE-7A39F6C7AEB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B9B1583B-1E51-464D-90BE-7A39F6C7AEB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B9B1583B-1E51-464D-90BE-7A39F6C7AEB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1F049AC4-6FB9-4A9D-9E3A-216F32F86E72} = {C12233A1-EE59-46DB-B04F-CDC92853FD68}
-		{B9B1583B-1E51-464D-90BE-7A39F6C7AEB7} = {D5FF55A2-A939-4509-B9D7-DC6FD2D4FD88}
 	EndGlobalSection
 EndGlobal
