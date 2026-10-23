@@ -20,8 +20,8 @@ public static class ThemeManager
     private static Application? _app;
     private static LinearGradientBrush? _accentFill;
     private static DispatcherTimer? _watch;
-    private static readonly string PrefPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "duck", "DuckPrinter", "theme");
+    // %APPDATA%\Duck\DuckPrinter\theme: propria dell'app, non condivisa con le altre app Duck
+    private static string PrefPath => DuckPrinterManager.Core.Services.AppPaths.ThemePreference;
 
     /// <summary>Tema effettivamente applicato: light | dark.</summary>
     public static string Effective { get; private set; } = "light";
@@ -65,7 +65,9 @@ public static class ThemeManager
     {
         try
         {
-            var p = File.ReadAllText(PrefPath).Trim().ToLowerInvariant();
+            // prima volta: si eredita la scelta fatta con le versioni precedenti (file condiviso, solo lettura)
+            var file = File.Exists(PrefPath) ? PrefPath : DuckPrinterManager.Core.Services.AppPaths.LegacyThemePreference;
+            var p = File.ReadAllText(file).Trim().ToLowerInvariant();
             if (p is "system" or "light" or "dark") return p;
         }
         catch { }
