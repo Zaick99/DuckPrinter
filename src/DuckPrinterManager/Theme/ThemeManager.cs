@@ -21,7 +21,7 @@ public static class ThemeManager
     private static LinearGradientBrush? _accentFill;
     private static DispatcherTimer? _watch;
     private static readonly string PrefPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Duck", "theme");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "duck", "DuckPrinter", "theme");
 
     /// <summary>Tema effettivamente applicato: light | dark.</summary>
     public static string Effective { get; private set; } = "light";
