@@ -2,6 +2,15 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.0] - 2026-10-23
+
+### Changed
+
+- **Dati nella suite Duck.** Config, task, log, cache dei driver e tema ora sotto
+  `%APPDATA%\duck\DuckPrinter` (prima config in `%LOCALAPPDATA%\Duck\PrinterManager`
+  e tema in `%APPDATA%\Duck\theme`). Nessuna migrazione automatica: i file della
+  2.0.0 restano dove sono finché non li sposti a mano.
+
 ## [2.0.0] - 2026-10-20
 
 The first release of version 2: the PowerShell script `start.ps1` rewritten as a

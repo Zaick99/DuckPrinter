@@ -157,7 +157,7 @@ public sealed class AppConfig
 public static class AppPaths
 {
     public static string Root { get; set; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Duck", "PrinterManager");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "duck", "DuckPrinter");
 
     public static string Config => Path.Combine(Root, "duck_config.json");
     public static string Tasks => Path.Combine(Root, "duck_tasks.json");
