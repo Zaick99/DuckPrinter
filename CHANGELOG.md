@@ -2,6 +2,17 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Migrazione automatica dalla 2.0.0.** Al primo avvio i file di
+  `%LOCALAPPDATA%\Duck\PrinterManager` (configurazione, coda dei task, log, cache dei
+  driver) vengono spostati in `%APPDATA%\duck\DuckPrinter`, e i percorsi della cache
+  dentro i task in coda vengono riscritti. Funziona anche se la 2.0.1 è già stata
+  avviata: la coda vuota che creava viene sostituita da quella vecchia. Il tema eredita
+  la scelta fatta prima.
+
 ## [2.0.1] - 2026-10-23
 
 ### Changed

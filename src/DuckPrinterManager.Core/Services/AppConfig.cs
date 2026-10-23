@@ -156,6 +156,7 @@ public sealed class AppConfig
 
 public static class AppPaths
 {
+    /// <summary>Tutti i file dell'app (configurazione, task, log, cache driver, script, tema).</summary>
     public static string Root { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "duck", "DuckPrinter");
 
@@ -164,14 +165,115 @@ public static class AppPaths
     public static string LogFile => Path.Combine(Root, "duck_printer_manager.log");
     public static string DriverCache => Path.Combine(Root, "_driver_cache");
     public static string ScriptsDir => Path.Combine(Root, "ps");
+    public static string ThemePreference => Path.Combine(Root, "theme");
 
     /// <summary>duck_config.json accanto all'eseguibile (installazione "portatile" come lo script).</summary>
     public static string LegacyConfig => Path.Combine(AppContext.BaseDirectory, "duck_config.json");
 
+    /// <summary>Cartella delle versioni precedenti, migrata in <see cref="Root"/> al primo avvio.</summary>
+    public static string LegacyRoot => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Duck", "PrinterManager");
+
+    /// <summary>Preferenza del tema delle versioni precedenti (condivisa con le altre app Duck: solo lettura).</summary>
+    public static string LegacyThemePreference => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Duck", "theme");
+
     public static void Ensure()
     {
+        MigrateLegacy();
         Directory.CreateDirectory(Root);
         Directory.CreateDirectory(DriverCache);
         Directory.CreateDirectory(ScriptsDir);
+    }
+
+    /// <summary>
+    /// Sposta i dati da %LOCALAPPDATA%\Duck\PrinterManager (2.0.0) finche' nella nuova cartella non c'e'
+    /// una configurazione salvata: configurazione, coda dei task (+ .bak), log e cache driver.
+    /// La 2.0.1 creava gia' la cartella nuova con una coda vuota e la cache vuota: una coda senza
+    /// task viene sostituita da quella vecchia e la cache si sposta cartella per cartella. I task
+    /// puntano ai driver con il percorso assoluto della cache, quindi il percorso viene riscritto
+    /// dentro duck_tasks.json. Gli script (ps\) si rigenerano da soli.
+    /// </summary>
+    private static void MigrateLegacy()
+    {
+        try
+        {
+            var old = LegacyRoot;
+            if (!Directory.Exists(old) || File.Exists(Config)) return;
+            Directory.CreateDirectory(Root);
+
+            foreach (var name in new[] { "duck_config.json", "duck_tasks.json", "duck_tasks.json.bak", "duck_printer_manager.log", "duck_printer_manager.log.1" })
+            {
+                var src = Path.Combine(old, name);
+                var dst = Path.Combine(Root, name);
+                if (!File.Exists(src)) continue;
+                if (File.Exists(dst))
+                {
+                    if (!name.StartsWith("duck_tasks", StringComparison.Ordinal) || !IsEmptyQueue(dst)) continue;
+                    File.Delete(dst);
+                }
+                MoveOrCopy(src, dst);
+            }
+
+            var oldCache = Path.Combine(old, "_driver_cache");
+            if (Directory.Exists(oldCache))
+            {
+                Directory.CreateDirectory(DriverCache);
+                foreach (var dir in Directory.EnumerateDirectories(oldCache))
+                {
+                    var target = Path.Combine(DriverCache, Path.GetFileName(dir));
+                    if (Directory.Exists(target)) continue;
+                    try { Directory.Move(dir, target); }
+                    catch { CopyDir(dir, target); }
+                }
+            }
+
+            foreach (var name in new[] { "duck_tasks.json", "duck_tasks.json.bak" })
+            {
+                var f = Path.Combine(Root, name);
+                if (!File.Exists(f)) continue;
+                var json = File.ReadAllText(f);
+                // nel JSON le barre rovesciate sono raddoppiate
+                var fixedJson = json.Replace(JsonEscape(oldCache), JsonEscape(DriverCache), StringComparison.OrdinalIgnoreCase);
+                if (fixedJson != json) File.WriteAllText(f, fixedJson);
+            }
+
+            try { Directory.Delete(Path.Combine(old, "ps"), true); } catch { }
+            try { if (Directory.Exists(oldCache) && !Directory.EnumerateFileSystemEntries(oldCache).Any()) Directory.Delete(oldCache); } catch { }
+            try { if (!Directory.EnumerateFileSystemEntries(old).Any()) Directory.Delete(old); } catch { }
+        }
+        catch
+        {
+            // la migrazione non deve mai impedire l'avvio: nel peggiore dei casi si riparte da zero
+        }
+    }
+
+    /// <summary>Coda salvata senza alcun task (quella che la 2.0.1 scriveva al primo avvio).</summary>
+    private static bool IsEmptyQueue(string path)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(path));
+            return doc.RootElement.TryGetProperty("tasks", out var t) && t.ValueKind == JsonValueKind.Array && t.GetArrayLength() == 0;
+        }
+        catch { return false; }
+    }
+
+    private static string JsonEscape(string s) => s.Replace("\\", "\\\\");
+
+    private static void MoveOrCopy(string src, string dst)
+    {
+        try { File.Move(src, dst); }
+        catch { File.Copy(src, dst, overwrite: false); }
+    }
+
+    private static void CopyDir(string src, string dst)
+    {
+        foreach (var f in Directory.EnumerateFiles(src, "*", SearchOption.AllDirectories))
+        {
+            var target = Path.Combine(dst, Path.GetRelativePath(src, f));
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.Copy(f, target, overwrite: true);
+        }
     }
 }

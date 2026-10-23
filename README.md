@@ -237,15 +237,20 @@ Set the real ones in **Impostazioni** on first start. They are saved in
 
 ## Where the data lives
 
+Everything in one folder, like every Duck application:
+
 ```
-%LOCALAPPDATA%\Duck\PrinterManager\
+%APPDATA%\duck\DuckPrinter\
   duck_config.json            settings (passwords protected with DPAPI)
   duck_tasks.json  (+ .bak)   the task queue, written atomically
   duck_printer_manager.log    log, rotated at 5 MB
   _driver_cache\              copies of the drivers used by queued tasks
   ps\                         the PowerShell scripts, extracted at start
-%APPDATA%\Duck\theme          light / dark / system
+  theme                       light / dark / system
 ```
+
+Data left by 2.0.0 in `%LOCALAPPDATA%\Duck\PrinterManager` is moved here on first start,
+queued tasks and driver cache included; the theme picks up the choice made before.
 
 The AD password lives only in memory, inside the Rust core, and is zeroed when you
 sign out or close the application.
