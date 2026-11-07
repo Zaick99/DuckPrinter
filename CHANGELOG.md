@@ -4,6 +4,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Driver con molti file (Canon) che fallivano durante la copia.** Il driver ora viaggia
+  come un unico zip, preparato dall'app in `%APPDATA%\duck\DuckPrinter\tmp` e cancellato a
+  fine tentativo, e si estrae sul PC in una cartella temporanea corta e accessibile,
+  `C:\Windows\Temp\DuckPM\<8 caratteri>`, al posto di `C:\ProgramData\DuckPM\job_<task>_<...>\drv`.
+  Niente piu' percorsi oltre i 260 caratteri con Windows PowerShell 5.1, niente file in sola
+  lettura, un solo trasferimento anche via WinRM. Se un file non si estrae l'errore dice quale
+  e quanto e' lungo il suo percorso.
+- **La cartella temporanea si rimuove sempre** a operazione conclusa: attributi sbloccati,
+  tentativi ripetuti, `rd /s /q` come ultima risorsa. Le cartelle rimaste da tentativi
+  interrotti si tolgono dopo un giorno, solo quelle create dall'app.
+- Chi aveva lasciato la cartella di lavoro predefinita passa da sola a quella nuova.
+
 ### Added
 
 - **Migrazione automatica dalla 2.0.0.** Al primo avvio i file di

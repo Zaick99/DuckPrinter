@@ -40,7 +40,13 @@ public sealed class AppConfig
     public List<string> SetPrtPaths { get; set; } = [@"C:\set_prt"];
     public string SetPrtBatch { get; set; } = "set_prt.bat";
     public string SetPrtProcess { get; set; } = "set_prt_agent";
-    public string RemoteWorkDir { get; set; } = @"C:\ProgramData\DuckPM";
+    /// <summary>Cartella temporanea sui PC di destinazione: corta (percorsi dei driver entro i 260
+    /// caratteri) e accessibile ad amministratori e SYSTEM. Ogni job vi crea una sottocartella
+    /// che viene rimossa a fine operazione.</summary>
+    public string RemoteWorkDir { get; set; } = DefaultRemoteWorkDir;
+
+    public const string DefaultRemoteWorkDir = @"C:\Windows\Temp\DuckPM";
+    private const string OldRemoteWorkDir = @"C:\ProgramData\DuckPM";
     public bool DeployUseAdCredentials { get; set; } = true;
     public bool CacheDrivers { get; set; } = true;
 
@@ -99,6 +105,9 @@ public sealed class AppConfig
         ADGroups = ADGroups.Where(g => !string.IsNullOrWhiteSpace(g)).Select(g => g.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         SetPrtPaths = SetPrtPaths.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim().TrimEnd('\\')).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         if (SetPrtPaths.Count == 0) SetPrtPaths.Add(@"C:\set_prt");
+        // il vecchio predefinito era lungo e in ProgramData: chi non l'aveva cambiato passa al nuovo
+        if (string.IsNullOrWhiteSpace(RemoteWorkDir) || string.Equals(RemoteWorkDir.TrimEnd('\\'), OldRemoteWorkDir, StringComparison.OrdinalIgnoreCase))
+            RemoteWorkDir = DefaultRemoteWorkDir;
     }
 
     public void Clamp()
@@ -166,6 +175,8 @@ public static class AppPaths
     public static string DriverCache => Path.Combine(Root, "_driver_cache");
     public static string ScriptsDir => Path.Combine(Root, "ps");
     public static string ThemePreference => Path.Combine(Root, "theme");
+    /// <summary>File temporanei dell'app (zip dei driver da inviare): ognuno si cancella a fine uso.</summary>
+    public static string TempDir => Path.Combine(Root, "tmp");
 
     /// <summary>duck_config.json accanto all'eseguibile (installazione "portatile" come lo script).</summary>
     public static string LegacyConfig => Path.Combine(AppContext.BaseDirectory, "duck_config.json");

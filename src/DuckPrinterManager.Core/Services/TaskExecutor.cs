@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text.Json;
 using DuckPrinterManager.Core.Models;
 
@@ -35,10 +36,17 @@ public sealed class TaskExecutor(PowerShellRunner ps, Func<AppConfig> config, Fu
                     string.Join(" poi ", creds.Select(c => c?.User ?? $"{Environment.UserDomainName}\\{Environment.UserName} (Windows)")));
 
         object input;
+        string? zip = null;
         if (task.Action == TaskActions.Deploy)
         {
             if (!Directory.Exists(p.DriverDir))
                 return TaskOutcome.Error($"Cartella driver non disponibile: {p.DriverDir}");
+            // Il driver viaggia come UN solo file: copiare file per file pacchetti con migliaia di
+            // file e cartelle profonde (Canon) falliva per lunghezza dei percorsi e sola lettura.
+            // .NET 8 legge percorsi lunghi senza limiti; lo zip si cancella a fine tentativo.
+            try { zip = await Task.Run(() => PackDriver(p.DriverDir, task.Id), ct); }
+            catch (Exception ex) { return TaskOutcome.Error($"Preparazione del driver non riuscita: {ex.Message}"); }
+            log("DEBUG", $"Driver compresso per l'invio: {new FileInfo(zip).Length / 1048576.0:N1} MB");
             input = new
             {
                 Action = "deploy",
@@ -52,7 +60,7 @@ public sealed class TaskExecutor(PowerShellRunner ps, Func<AppConfig> config, Fu
                 Deploy = new
                 {
                     p.DriverName,
-                    LocalDriverDir = p.DriverDir,
+                    LocalDriverZip = zip,
                     p.InfRelPath,
                     p.PrinterName,
                     p.PrinterAddress,
@@ -94,7 +102,9 @@ public sealed class TaskExecutor(PowerShellRunner ps, Func<AppConfig> config, Fu
             };
         }
 
-        var res = await ps.RunAsync("HostWorker.ps1", input, log, TimeSpan.FromSeconds(cfg.RemoteTimeoutSeconds + 120), ct);
+        PsRunResult res;
+        try { res = await ps.RunAsync("HostWorker.ps1", input, log, TimeSpan.FromSeconds(cfg.RemoteTimeoutSeconds + 120), ct); }
+        finally { if (zip is not null) TryDelete(zip); }
         if (!res.HasResult) return TaskOutcome.Error(res.ErrorText);
 
         var r = res.Result;
@@ -106,6 +116,26 @@ public sealed class TaskExecutor(PowerShellRunner ps, Func<AppConfig> config, Fu
             "offline" => TaskOutcome.Offline(msg),
             _ => TaskOutcome.Error(msg.Length > 0 ? msg : res.ErrorText),
         };
+    }
+
+    /// <summary>
+    /// Comprime la cartella del driver in %APPDATA%\duck\DuckPrinter\tmp. Prima toglie gli zip
+    /// rimasti da tentativi interrotti (app chiusa a meta'), piu' vecchi di un giorno.
+    /// </summary>
+    private static string PackDriver(string driverDir, string taskId)
+    {
+        Directory.CreateDirectory(AppPaths.TempDir);
+        foreach (var old in Directory.EnumerateFiles(AppPaths.TempDir, "*.zip"))
+            if (File.GetLastWriteTimeUtc(old) < DateTime.UtcNow.AddDays(-1)) TryDelete(old);
+        var zip = Path.Combine(AppPaths.TempDir, $"{taskId}-{Guid.NewGuid():N}"[..Math.Min(taskId.Length + 9, 64)] + ".zip");
+        TryDelete(zip);
+        ZipFile.CreateFromDirectory(driverDir, zip, CompressionLevel.Fastest, includeBaseDirectory: false);
+        return zip;
+    }
+
+    private static void TryDelete(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); } catch { }
     }
 
     /// <summary>"mario" -> "mario@dominio": senza dominio WinRM/SMB cercherebbero un utente locale del PC remoto.</summary>

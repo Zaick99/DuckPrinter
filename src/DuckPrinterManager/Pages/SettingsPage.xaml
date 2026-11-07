@@ -239,7 +239,7 @@
           <Border Style="{StaticResource GroupCard}">
             <Grid Style="{StaticResource FormRow}">
               <TextBlock Text="Cartella di lavoro" Style="{StaticResource RowLabel}"/>
-              <TextBox x:Name="TxtRemoteDir" Style="{StaticResource HintMono}" Width="260" HorizontalAlignment="Right" Tag="C:\ProgramData\DuckPM"/>
+              <TextBox x:Name="TxtRemoteDir" Style="{StaticResource HintMono}" Width="260" HorizontalAlignment="Right" Tag="C:\Windows\Temp\DuckPM"/>
             </Grid>
           </Border>
           <TextBlock Text="Ci vengono copiati driver e script del task; viene ripulita al termine." Style="{StaticResource GroupFooter}"/>

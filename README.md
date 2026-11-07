@@ -196,10 +196,18 @@ Every step has a second way when the first one fails:
 |---|---|---|
 | Account | the AD account you signed in with | your Windows account (order configurable) — the next one is tried only on *access denied* |
 | Transport | WinRM | WMI/DCOM with the files on the admin share |
-| Driver files | SMB (`\\pc\C$`) | `Copy-Item -ToSession` |
+| Driver files | one zip over SMB (`\\pc\C$`) | the same zip with `Copy-Item -ToSession` |
 | Driver install | `pnputil` + driver store | `Add-PrinterDriver`, `printui /ia`, `pnputil /subdirs`, DISM |
 | Port | `Add-PrinterPort` | WMI |
 | Queue | `Add-Printer` | `printui /if`, WMI `Win32_Printer` |
+
+**Drivers travel as one file.** The app packs the driver folder into a zip, sends that
+single file, and the PC unpacks it into a short temporary folder,
+`C:\Windows\Temp\DuckPM\<8 characters>`, readable by administrators and by the print
+spooler. Large packages with thousands of files and deep folders (Canon's, for one) no
+longer break on long paths or read-only files. The folder is removed when the operation
+ends, successful or not; folders left by interrupted attempts are cleared after a day,
+and only the ones the app created.
 
 When every account gets *access denied*, the task says so in plain words — the account
 must be a local administrator of the PC — and as soon as you sign in to AD those tasks
@@ -246,6 +254,7 @@ Everything in one folder, like every Duck application:
   duck_printer_manager.log    log, rotated at 5 MB
   _driver_cache\              copies of the drivers used by queued tasks
   ps\                         the PowerShell scripts, extracted at start
+  tmp\                        the driver zip of a task, deleted when the attempt ends
   theme                       light / dark / system
 ```
 

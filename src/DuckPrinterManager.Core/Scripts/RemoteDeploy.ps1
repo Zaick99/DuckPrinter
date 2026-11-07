@@ -170,6 +170,60 @@ function Restart-DuckSetPrt($Cfg) {
     if ($u) { L "set_prt rilanciato nella sessione di $u" } else { L 'set_prt: nessun utente collegato, verra eseguito al prossimo accesso' }
 }
 
+# ---------------------------------------------------------------- cartella temporanea dei driver
+# Il driver arriva come UN file zip nella cartella del job (corta, es. C:\Windows\Temp\DuckPM\1a2b3c4d)
+# e si estrae qui, file per file: un errore dice quale file e quanto e' lungo il suo percorso.
+# I file estratti non sono in sola lettura, quindi la cartella si rimuove senza intoppi.
+function Expand-DuckDriver([string]$Zip, [string]$Dest) {
+    $done = Join-Path $Dest '.extracted'
+    if (Test-Path -LiteralPath $done) { L 'Driver gia estratti da un tentativo precedente'; return }
+    if (-not (Test-Path -LiteralPath $Zip)) { throw "Pacchetto driver non arrivato sul PC: $Zip" }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $base = [System.IO.Path]::GetFullPath($Dest).TrimEnd('\') + '\'
+    [void][System.IO.Directory]::CreateDirectory($base)
+    $za = [System.IO.Compression.ZipFile]::OpenRead($Zip)
+    $n = 0; $bytes = 0; $longest = 0
+    try {
+        foreach ($e in $za.Entries) {
+            $rel = $e.FullName.Replace('/', '\')
+            $target = $base + $rel
+            if ($target.Length -gt $longest) { $longest = $target.Length }
+            if ($rel.EndsWith('\')) { [void][System.IO.Directory]::CreateDirectory($target); continue }
+            $full = [System.IO.Path]::GetFullPath($target)
+            if (-not $full.StartsWith($base, [StringComparison]::OrdinalIgnoreCase)) { throw "Voce non valida nel pacchetto: $rel" }
+            try {
+                [void][System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($full))
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($e, $full, $true)
+            } catch {
+                $m = $_.Exception; while ($m.InnerException) { $m = $m.InnerException }
+                $hint = ''
+                if ($target.Length -ge 248) { $hint = ' - percorso troppo lungo: accorciare la cartella di lavoro nelle impostazioni o abilitare i percorsi lunghi (LongPathsEnabled) sul PC' }
+                throw "Estrazione di '$rel' non riuscita ($($target.Length) caratteri): $($m.Message)$hint"
+            }
+            $n++; $bytes += $e.Length
+        }
+    } finally { $za.Dispose() }
+    Set-Content -LiteralPath $done -Value $n
+    try { Remove-Item -LiteralPath $Zip -Force } catch { }
+    L ("Driver estratti in {0}: {1} file, {2:N1} MB, percorso piu lungo {3} caratteri" -f $Dest, $n, ($bytes / 1MB), $longest)
+}
+
+# Cartelle di job rimaste da tentativi interrotti (PC spento a meta', app chiusa): via dopo un giorno.
+# Solo quelle create dall'app (file .duckpm), mai il resto della cartella temporanea.
+function Clear-DuckStaleJobs([string]$JobDir) {
+    try {
+        $root = Split-Path -Parent $JobDir
+        Get-ChildItem -LiteralPath $root -Directory -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -ne $JobDir -and $_.LastWriteTime -lt (Get-Date).AddDays(-1) -and (Test-Path -LiteralPath (Join-Path $_.FullName '.duckpm')) } |
+            ForEach-Object {
+                $p = $_.FullName
+                Get-ChildItem -LiteralPath $p -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object { try { $_.Attributes = 'Normal' } catch { } }
+                Remove-Item -LiteralPath $p -Recurse -Force -ErrorAction SilentlyContinue
+                if (-not (Test-Path -LiteralPath $p)) { L "Rimossa cartella temporanea rimasta da un tentativo precedente: $p" }
+            }
+    } catch { }
+}
+
 if ($CfgJson -eq '__LOADONLY__') { return }
 
 # =====================================================================================
@@ -199,6 +253,10 @@ try {
         $res.driverMethod = 'gia presente'
         L "Driver '$dn' gia installato"
     } else {
+        if ($cfg.DriverZip) {
+            Clear-DuckStaleJobs (Split-Path -Parent $dir)
+            Expand-DuckDriver ([string]$cfg.DriverZip) $dir
+        }
         $infs = @(Get-ChildItem -LiteralPath $dir -Filter *.inf -Recurse -ErrorAction SilentlyContinue)
         if ($infs.Count -eq 0) { throw "Nessun file INF in $dir" }
         if (-not $inf -or -not (Test-Path -LiteralPath $inf)) { $inf = $infs[0].FullName }
@@ -334,7 +392,7 @@ try {
     $res.message = $_.Exception.Message
     L "ERRORE: $($_.Exception.Message)"
 }
-# la cartella driver NON si cancella qui: se questo trasporto fallisce, HostWorker ritenta con
-# un altro (WMI) sugli stessi file e poi ripulisce l'intera cartella del job
+# la cartella del job NON si cancella qui: se questo trasporto fallisce, HostWorker ritenta con
+# un altro (WMI) sugli stessi file gia' estratti, e a fine operazione rimuove l'intera cartella
 $res.log = @($Script:DuckLog)
 return ($res | ConvertTo-Json -Depth 5 -Compress)

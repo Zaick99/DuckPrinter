@@ -4,7 +4,8 @@
 #  si passa all'account successivo se nessun trasporto ha potuto eseguire il payload e almeno
 #  uno ha ricevuto "accesso negato" (la rete funziona, mancano i permessi).
 #  Trasporti in cascata, per ogni account:
-#    file driver : SMB (\\host\C$)  ->  WinRM Copy-Item -ToSession
+#    file driver : UN solo zip (preparato dall'app) via SMB (\\host\C$) -> WinRM -ToSession;
+#                  estratto sul PC in una cartella temporanea corta, rimossa a fine operazione
 #    esecuzione  : WinRM Invoke-Command  ->  WMI/DCOM Win32_Process.Create (+ file su SMB)
 #  Il payload (RemoteDeploy/RemoteRemove) a sua volta prova piu' metodi per driver, porta,
 #  stampante. Esito: ##RESULT|{ status: ok|offline|error, message, transport }
@@ -25,7 +26,7 @@ try {
     if ($timeoutSec -lt 60) { $timeoutSec = 900 }
 
     $root    = ([string]$in.RemoteDir).TrimEnd('\')
-    if ($root -notmatch '^([A-Za-z]):(\\.*)?$') { throw "RemoteDir deve essere un percorso locale (es. C:\ProgramData\DuckPM): $root" }
+    if ($root -notmatch '^([A-Za-z]):(\\.*)?$') { throw "RemoteDir deve essere un percorso locale (es. C:\Windows\Temp\DuckPM): $root" }
     $driveLetter = $matches[1]; $rest = $matches[2]
 
     $isDeploy = ($in.Action -eq 'deploy')
@@ -48,12 +49,33 @@ try {
         return $r
     }
 
+    # Rimozione robusta di una cartella: toglie sola lettura/nascosto/sistema (frequenti nei
+    # pacchetti driver), riprova se un file e' ancora aperto, poi ripiega su "rd /s /q".
+    # Gira sia in locale (percorso UNC) sia sul PC remoto (Invoke-Command): solo cmdlet di base.
+    $RemoveTreeBlock = {
+        param([string]$Path)
+        if (-not $Path -or -not (Test-Path -LiteralPath $Path)) { return $true }
+        for ($i = 0; $i -lt 4; $i++) {
+            try {
+                Get-ChildItem -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue |
+                    ForEach-Object { try { $_.Attributes = 'Normal' } catch { } }
+                Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
+            } catch { Start-Sleep -Seconds 2 }
+            if (-not (Test-Path -LiteralPath $Path)) { return $true }
+        }
+        & cmd.exe /c "rd /s /q `"$Path`"" 2>$null | Out-Null
+        return -not (Test-Path -LiteralPath $Path)
+    }
+
     # ================================================================ un tentativo completo con UN account
     function Invoke-Attempt($credIn) {
         $cred    = New-DuckCredential $credIn
         $who     = if ($cred) { $cred.UserName } else { "$me (Windows)" }
-        $jobId   = ('{0}_{1}' -f $in.TaskId, ([guid]::NewGuid().ToString('N').Substring(0, 6)))
-        $jobDir  = "$root\job_$jobId"                       # percorso visto dal PC remoto
+        # nome corto: i pacchetti driver (Canon...) hanno cartelle profonde e Windows PowerShell 5.1
+        # sul PC remoto non va oltre 260 caratteri. Il file .duckpm marca le cartelle nostre.
+        $jobId   = [guid]::NewGuid().ToString('N').Substring(0, 8)
+        $jobDir  = "$root\$jobId"                           # percorso visto dal PC remoto
+        Write-DuckLog 'DEBUG' "Cartella temporanea sul PC: $jobDir (task $($in.TaskId))"
         $att = @{ ok = $false; final = $null; transport = ''; errors = @(); ran = $false; denied = $false; who = $who }
         $drive = $null; $session = $null; $smbRoot = $null; $smbError = ''
 
@@ -70,7 +92,8 @@ try {
                     if (-not (Test-Path -LiteralPath $unc)) { throw "share $unc non accessibile (accesso negato o share amministrative disattivate)" }
                     $smbRoot = "$unc$rest"
                 }
-                New-Item -ItemType Directory -Path "$smbRoot\job_$jobId" -Force | Out-Null
+                New-Item -ItemType Directory -Path "$smbRoot\$jobId" -Force | Out-Null
+                Set-Content -LiteralPath "$smbRoot\$jobId\.duckpm" -Value ([string]$in.TaskId)
                 Write-DuckLog 'DEBUG' "SMB: $unc accessibile"
             } catch {
                 $smbRoot = $null
@@ -82,17 +105,17 @@ try {
             function New-RemoteConfigJson {
                 $o = @{}
                 foreach ($p in $cfg.PSObject.Properties) { $o[$p.Name] = $p.Value }
-                if ($isDeploy) { $o['DriverDir'] = "$jobDir\drv" }
+                [void]$o.Remove('LocalDriverZip')
+                if ($isDeploy) { $o['DriverDir'] = "$jobDir\d"; $o['DriverZip'] = "$jobDir\d.zip" }
                 $o['TaskId'] = [string]$in.TaskId
                 return ($o | ConvertTo-Json -Depth 6 -Compress)
             }
 
+            $zipLocal = [string]$cfg.LocalDriverZip
             if ($isDeploy -and $smbRoot) {
                 try {
-                    $dst = "$smbRoot\job_$jobId\drv"
-                    New-Item -ItemType Directory -Path $dst -Force | Out-Null
-                    Copy-Item -Path (Join-Path ([string]$cfg.LocalDriverDir) '*') -Destination $dst -Recurse -Force
-                    Write-DuckLog 'INFO' 'File driver copiati via SMB'
+                    Copy-Item -LiteralPath $zipLocal -Destination "$smbRoot\$jobId\d.zip" -Force
+                    Write-DuckLog 'INFO' ("Driver inviato via SMB ({0:N1} MB)" -f ((Get-Item -LiteralPath $zipLocal).Length / 1MB))
                 } catch { Write-DuckLog 'WARN' "Copia SMB fallita: $($_.Exception.Message)"; $smbError = $_.Exception.Message; $smbRoot = $null }
             }
 
@@ -102,11 +125,15 @@ try {
                 $p = @{ ComputerName = $h; SessionOption = $so; ErrorAction = 'Stop' }
                 if ($cred) { $p['Credential'] = $cred }
                 $script:session = New-PSSession @p
-                if ($isDeploy) {
-                    Invoke-Command -Session $script:session -ScriptBlock { param($d) New-Item -ItemType Directory -Path $d -Force | Out-Null } -ArgumentList "$jobDir\drv"
-                    if (-not $smbRoot) {
-                        Write-DuckLog 'INFO' 'Copia driver via WinRM (Copy-Item -ToSession)'
-                        Copy-Item -Path (Join-Path ([string]$cfg.LocalDriverDir) '*') -Destination "$jobDir\drv" -ToSession $script:session -Recurse -Force
+                if (-not $smbRoot) {
+                    Invoke-Command -Session $script:session -ScriptBlock {
+                        param($d, $id)
+                        New-Item -ItemType Directory -Path $d -Force | Out-Null
+                        Set-Content -LiteralPath (Join-Path $d '.duckpm') -Value $id
+                    } -ArgumentList $jobDir, ([string]$in.TaskId)
+                    if ($isDeploy) {
+                        Write-DuckLog 'INFO' 'Invio del driver via WinRM (Copy-Item -ToSession, un solo file)'
+                        Copy-Item -LiteralPath $zipLocal -Destination "$jobDir\d.zip" -ToSession $script:session -Force
                     }
                 }
                 $raw = Invoke-Command -Session $script:session -ScriptBlock ([scriptblock]::Create([string]$in.PayloadText)) -ArgumentList (New-RemoteConfigJson)
@@ -117,7 +144,7 @@ try {
             function Invoke-ViaWmi {
                 if (-not $smbRoot) { throw "WMI richiede la share amministrativa per scambiare i file, che non e' disponibile: $smbError" }
                 $enc = New-Object System.Text.UTF8Encoding($true)
-                $smbJob = "$smbRoot\job_$jobId"
+                $smbJob = "$smbRoot\$jobId"
                 [System.IO.File]::WriteAllText((Convert-Path -LiteralPath $smbJob) + '\payload.ps1', [string]$in.PayloadText, $enc)
                 [System.IO.File]::WriteAllText((Convert-Path -LiteralPath $smbJob) + '\cfg.json', (New-RemoteConfigJson), $enc)
                 $runner = @"
@@ -172,10 +199,18 @@ Move-Item '$jobDir\result.tmp' '$jobDir\result.json' -Force
                 }
             }
         } finally {
+            # cartella temporanea del job: via, a operazione conclusa (riuscita o no)
+            $gone = $false
             try {
-                if ($smbRoot) { Remove-Item -LiteralPath "$smbRoot\job_$jobId" -Recurse -Force -ErrorAction SilentlyContinue }
-                elseif ($script:session) { Invoke-Command -Session $script:session -ScriptBlock { param($d) Remove-Item -LiteralPath $d -Recurse -Force -ErrorAction SilentlyContinue } -ArgumentList $jobDir }
+                if ($script:session) {
+                    $gone = Invoke-Command -Session $script:session -ScriptBlock $RemoveTreeBlock -ArgumentList $jobDir
+                } elseif ($smbRoot) {
+                    # percorso del PSDrive (porta con se' le credenziali dell'account in uso)
+                    $gone = & $RemoveTreeBlock "$smbRoot\$jobId"
+                }
             } catch { }
+            if ($gone) { Write-DuckLog 'DEBUG' "Cartella temporanea rimossa: $jobDir" }
+            else { Write-DuckLog 'WARN' "Cartella temporanea non rimossa ora: $jobDir (verra' tolta al prossimo task su questo PC)" }
             if ($script:session) { Remove-PSSession $script:session -ErrorAction SilentlyContinue; $script:session = $null }
             if ($drive) { Remove-PSDrive -Name $drive.Name -Force -ErrorAction SilentlyContinue }
         }

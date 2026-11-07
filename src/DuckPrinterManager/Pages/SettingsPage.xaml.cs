@@ -115,7 +115,7 @@ public partial class SettingsPage : UserControl, IPage
         c.SetPrtBatch = TxtSetPrtBat.Text.Trim();
         c.SetPrtProcess = TxtSetPrtProc.Text.Trim();
         c.RemoteWorkDir = TxtRemoteDir.Text.Trim().TrimEnd('\\');
-        if (!System.Text.RegularExpressions.Regex.IsMatch(c.RemoteWorkDir, @"^[A-Za-z]:\\")) errors.Add("La cartella di lavoro remota deve essere un percorso locale (es. C:\\ProgramData\\DuckPM)");
+        if (!System.Text.RegularExpressions.Regex.IsMatch(c.RemoteWorkDir, @"^[A-Za-z]:\\")) errors.Add("La cartella di lavoro remota deve essere un percorso locale (es. C:\\Windows\\Temp\\DuckPM)");
         c.RestartSetPrt = ChkSetPrtDefault.IsChecked == true;
         c.DeployPreRemove = CmbPreRemove.SelectedValue as string ?? "none";
         c.RemovePortsDefault = ChkRemovePortsDefault.IsChecked == true;
