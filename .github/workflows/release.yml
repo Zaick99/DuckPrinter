@@ -86,4 +86,4 @@ jobs:
           $v = '${{ steps.ver.outputs.version }}'
           gh release create "v$v" dist/DuckPrinterManager.exe dist/SHA256SUMS.txt `
             --repo "${{ github.repository }}" --target "${{ github.sha }}" `
-            --title "Duck Printer Manager $v" --notes-file dist/notes.md --latest
+            --title "DuckPrinter $v" --notes-file dist/notes.md --latest

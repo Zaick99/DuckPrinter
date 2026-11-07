@@ -2,7 +2,22 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.0.1] - 2026-11-07
+
+### Changed
+
+- **Dati nella suite Duck.** Config, task, log, cache dei driver e tema ora sotto
+  `%APPDATA%\duck\DuckPrinter` (prima config in `%LOCALAPPDATA%\Duck\PrinterManager`
+  e tema in `%APPDATA%\Duck\theme`, condiviso con le altre app Duck).
+
+### Added
+
+- **Migrazione automatica dalla 2.0.0.** Al primo avvio i file di
+  `%LOCALAPPDATA%\Duck\PrinterManager` (configurazione, coda dei task, log, cache dei
+  driver) vengono spostati in `%APPDATA%\duck\DuckPrinter`, e i percorsi della cache
+  dentro i task in coda vengono riscritti. Funziona anche se una build precedente della
+  2.0.1 è già stata avviata: la coda vuota che creava viene sostituita da quella vecchia.
+  Il tema eredita la scelta fatta prima.
 
 ### Fixed
 
@@ -17,24 +32,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   tentativi ripetuti, `rd /s /q` come ultima risorsa. Le cartelle rimaste da tentativi
   interrotti si tolgono dopo un giorno, solo quelle create dall'app.
 - Chi aveva lasciato la cartella di lavoro predefinita passa da sola a quella nuova.
-
-### Added
-
-- **Migrazione automatica dalla 2.0.0.** Al primo avvio i file di
-  `%LOCALAPPDATA%\Duck\PrinterManager` (configurazione, coda dei task, log, cache dei
-  driver) vengono spostati in `%APPDATA%\duck\DuckPrinter`, e i percorsi della cache
-  dentro i task in coda vengono riscritti. Funziona anche se la 2.0.1 è già stata
-  avviata: la coda vuota che creava viene sostituita da quella vecchia. Il tema eredita
-  la scelta fatta prima.
-
-## [2.0.1] - 2026-10-23
-
-### Changed
-
-- **Dati nella suite Duck.** Config, task, log, cache dei driver e tema ora sotto
-  `%APPDATA%\duck\DuckPrinter` (prima config in `%LOCALAPPDATA%\Duck\PrinterManager`
-  e tema in `%APPDATA%\Duck\theme`). Nessuna migrazione automatica: i file della
-  2.0.0 restano dove sono finché non li sposti a mano.
 
 ## [2.0.0] - 2026-10-20
 
