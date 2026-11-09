@@ -162,6 +162,10 @@ public partial class TasksPage : UserControl, IPage
         var n = LstTasks.SelectedItems.Count;
         TxtSelection.Text = n == 1 ? "1 selezionato" : $"{n} selezionati";
         Fx.SlideVisible(SelectionBar, n > 0);
+        // La lista occupa tutto il riquadro; solo mentre la barra di selezione e' visibile lascia
+        // in basso lo spazio per non coprire le ultime righe (il padding di un ListView sta fuori
+        // dalla zona che scorre: tenerlo fisso accorciava la lista di 64 px anche senza barra).
+        LstTasks.Padding = new Thickness(8, 4, 8, n > 0 ? 64 : 4);
     }
 
     private bool NeedSelection()

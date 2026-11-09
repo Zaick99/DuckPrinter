@@ -2,36 +2,44 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [2.0.1] - 2026-11-07
+## [2.0.2] - 2026-11-09
+
+### Added
+
+- **Automatic migration from 2.0.0.** On first start the files in
+  `%LOCALAPPDATA%\Duck\PrinterManager` (settings, task queue, log, driver cache) are
+  moved to `%APPDATA%\duck\DuckPrinter`, and the driver-cache paths inside queued tasks
+  are rewritten, so those tasks still find their drivers. It works even if 2.0.1 has
+  already been started: the empty queue 2.0.1 created is replaced by the old one. The
+  theme keeps the choice made before.
+
+### Fixed
+
+- **Drivers with many files (Canon's, for one) failing while being copied.** A driver now
+  travels as a single zip, packed by the app in `%APPDATA%\duck\DuckPrinter\tmp` and
+  deleted when the attempt ends, and is unpacked on the PC into a short, accessible
+  temporary folder, `C:\Windows\Temp\DuckPM\<8 characters>`, instead of
+  `C:\ProgramData\DuckPM\job_<task>_<...>\drv`. No more paths over 260 characters under
+  Windows PowerShell 5.1, no read-only files, a single transfer over WinRM too. When a file
+  cannot be unpacked, the error names it and says how long its path is.
+- **The temporary folder is always removed** when the operation ends, whether it
+  succeeded or not: attributes cleared, repeated attempts, `rd /s /q` as a last resort.
+  Folders left by interrupted attempts are removed after a day, and only the ones the app
+  created.
+- Installations still using the old default working folder switch to the new one on their
+  own.
+- **The task list in Scheduled tasks** now fills its panel to the bottom. A fixed 64 px
+  space for the selection bar was always reserved, even with nothing selected; now it
+  appears only while the bar is shown.
+
+## [2.0.1] - 2026-10-23
 
 ### Changed
 
 - **Dati nella suite Duck.** Config, task, log, cache dei driver e tema ora sotto
   `%APPDATA%\duck\DuckPrinter` (prima config in `%LOCALAPPDATA%\Duck\PrinterManager`
-  e tema in `%APPDATA%\Duck\theme`, condiviso con le altre app Duck).
-
-### Added
-
-- **Migrazione automatica dalla 2.0.0.** Al primo avvio i file di
-  `%LOCALAPPDATA%\Duck\PrinterManager` (configurazione, coda dei task, log, cache dei
-  driver) vengono spostati in `%APPDATA%\duck\DuckPrinter`, e i percorsi della cache
-  dentro i task in coda vengono riscritti. Funziona anche se una build precedente della
-  2.0.1 è già stata avviata: la coda vuota che creava viene sostituita da quella vecchia.
-  Il tema eredita la scelta fatta prima.
-
-### Fixed
-
-- **Driver con molti file (Canon) che fallivano durante la copia.** Il driver ora viaggia
-  come un unico zip, preparato dall'app in `%APPDATA%\duck\DuckPrinter\tmp` e cancellato a
-  fine tentativo, e si estrae sul PC in una cartella temporanea corta e accessibile,
-  `C:\Windows\Temp\DuckPM\<8 caratteri>`, al posto di `C:\ProgramData\DuckPM\job_<task>_<...>\drv`.
-  Niente piu' percorsi oltre i 260 caratteri con Windows PowerShell 5.1, niente file in sola
-  lettura, un solo trasferimento anche via WinRM. Se un file non si estrae l'errore dice quale
-  e quanto e' lungo il suo percorso.
-- **La cartella temporanea si rimuove sempre** a operazione conclusa: attributi sbloccati,
-  tentativi ripetuti, `rd /s /q` come ultima risorsa. Le cartelle rimaste da tentativi
-  interrotti si tolgono dopo un giorno, solo quelle create dall'app.
-- Chi aveva lasciato la cartella di lavoro predefinita passa da sola a quella nuova.
+  e tema in `%APPDATA%\Duck\theme`). Nessuna migrazione automatica: i file della
+  2.0.0 restano dove sono finché non li sposti a mano.
 
 ## [2.0.0] - 2026-10-20
 

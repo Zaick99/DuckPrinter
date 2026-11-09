@@ -189,7 +189,7 @@
           </Grid>
         </Border>
         <ListView x:Name="LstTasks" Grid.Row="1" Style="{StaticResource FlatListView}" ItemContainerStyle="{StaticResource RowListItem}"
-                  SelectionMode="Extended" SelectionChanged="OnSelection" MouseDoubleClick="OnDoubleClick" Padding="8,4,8,64"
+                  SelectionMode="Extended" SelectionChanged="OnSelection" MouseDoubleClick="OnDoubleClick" Padding="8,4,8,4"
                   VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
           <ListView.ContextMenu>
             <ContextMenu>
