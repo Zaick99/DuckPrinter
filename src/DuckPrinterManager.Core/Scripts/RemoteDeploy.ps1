@@ -224,6 +224,47 @@ function Clear-DuckStaleJobs([string]$JobDir) {
     } catch { }
 }
 
+# ---------------------------------------------------------------- firma dei driver
+# Installando a mano Windows chiede "Considerare sempre attendibile il software di <produttore>?".
+# In remoto (WinRM, sessione 0) la domanda non puo' comparire e pnputil fallisce con 0xE0000242:
+# qui si fa la stessa cosa del clic su Installa, solo per firme valide (catena verso una CA attendibile).
+function Add-DuckDriverPublisher([string]$Dir) {
+    $cats = @(Get-ChildItem -LiteralPath $Dir -Filter *.cat -Recurse -ErrorAction SilentlyContinue)
+    if ($cats.Count -eq 0) { L 'Driver senza file di catalogo (.cat): nessun editore da rendere attendibile'; return }
+    $store = New-Object System.Security.Cryptography.X509Certificates.X509Store('TrustedPublisher', 'LocalMachine')
+    $store.Open('ReadWrite')
+    try {
+        $seen = @{}
+        foreach ($c in $cats) {
+            $sig = Get-AuthenticodeSignature -LiteralPath $c.FullName
+            if ($sig.Status -ne 'Valid' -or -not $sig.SignerCertificate) { L "Catalogo $($c.Name): firma $($sig.Status), editore non aggiunto"; continue }
+            $cert = $sig.SignerCertificate
+            if ($seen.ContainsKey($cert.Thumbprint)) { continue }
+            $seen[$cert.Thumbprint] = $true
+            $who = $cert.GetNameInfo('SimpleName', $false)
+            if ($store.Certificates.Find('FindByThumbprint', $cert.Thumbprint, $false).Count -gt 0) { L "Editore gia attendibile: $who"; continue }
+            $store.Add($cert)
+            L "Editore reso attendibile: $who (certificato $($cert.Thumbprint), scade $($cert.NotAfter.ToString('yyyy-MM-dd')))"
+        }
+    } finally { $store.Close() }
+}
+
+# Codici di uscita di pnputil/SetupAPI che si incontrano installando driver di stampa
+function Get-DuckSetupError([int]$Code) {
+    $hex = '0x{0:X8}' -f $Code
+    switch ($hex) {
+        '0x00000000' { return 'ok' }
+        '0x00000BC2' { return 'ok, riavvio richiesto' }
+        '0xE0000242' { return "$hex editore del driver non ancora attendibile (risposta 'Installa' impossibile in remoto)" }
+        '0xE0000243' { return "$hex editore del driver rifiutato in passato (Non installare)" }
+        '0xE0000247' { return "$hex aggiunta all'archivio driver non riuscita" }
+        '0x800B0109' { return "$hex certificato radice della firma non attendibile su questo PC" }
+        '0x800B0100' { return "$hex driver non firmato" }
+        '0xE000022F' { return "$hex il catalogo non contiene l'hash di un file del driver (pacchetto alterato o incompleto)" }
+        default      { return $hex }
+    }
+}
+
 if ($CfgJson -eq '__LOADONLY__') { return }
 
 # =====================================================================================
@@ -261,11 +302,15 @@ try {
         if ($infs.Count -eq 0) { throw "Nessun file INF in $dir" }
         if (-not $inf -or -not (Test-Path -LiteralPath $inf)) { $inf = $infs[0].FullName }
         $store = Join-Path $env:SystemRoot 'System32\DriverStore\FileRepository'
+        if ($cfg.TrustDriverPublisher -ne $false) {
+            try { Add-DuckDriverPublisher $dir } catch { L "Editore attendibile: $($_.Exception.Message)" }
+        }
 
         $methods = @(
             @{ N = 'pnputil + Add-PrinterDriver (DriverStore)'; S = {
                 $out = & pnputil.exe /add-driver "$inf" /install 2>&1 | Out-String
-                L ("pnputil: " + (($out -split "\r?\n" | Where-Object { $_ -match 'oem\d+\.inf|Published|Pubblicato|Failed|Errore|added|aggiunt' }) -join ' | '))
+                $rc = $LASTEXITCODE
+                L ("pnputil: exit $(Get-DuckSetupError $rc) - " + (($out -split "\r?\n" | Where-Object { $_ -match 'oem\d+\.inf|Published|Pubblicato|Failed|Errore|added|aggiunt' }) -join ' | '))
                 $pub = $null
                 if ($out -match '(oem\d+\.inf)') { $pub = $matches[1] }
                 $target = $null
@@ -286,7 +331,7 @@ try {
             } },
             @{ N = 'pnputil /subdirs + Add-PrinterDriver'; S = {
                 $out = & pnputil.exe /add-driver (Join-Path $dir '*.inf') /subdirs /install 2>&1 | Out-String
-                L ("pnputil subdirs: exit $LASTEXITCODE")
+                L ("pnputil subdirs: exit $(Get-DuckSetupError $LASTEXITCODE)")
                 Start-Sleep -Seconds 2
                 Add-PrinterDriver -Name $dn
             } },

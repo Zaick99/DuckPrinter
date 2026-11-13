@@ -64,6 +64,7 @@ public partial class SettingsPage : UserControl, IPage
         ChkRemoveSetPrtDefault.IsChecked = c.RemoveRestartSetPrt;
         CmbStartDefault.SelectedValue = c.DeployStartDefault.ToString();
         ChkCache.IsChecked = c.CacheDrivers;
+        ChkTrustPublisher.IsChecked = c.TrustDriverPublisher;
         ChkAdCreds.IsChecked = c.DeployUseAdCredentials;
 
         TxtParallel.Text = c.TaskMaxParallel.ToString();
@@ -122,6 +123,7 @@ public partial class SettingsPage : UserControl, IPage
         c.RemoveRestartSetPrt = ChkRemoveSetPrtDefault.IsChecked == true;
         c.DeployStartDefault = int.TryParse(CmbStartDefault.SelectedValue as string, out var sd) ? sd : 0;
         c.CacheDrivers = ChkCache.IsChecked == true;
+        c.TrustDriverPublisher = ChkTrustPublisher.IsChecked == true;
         c.DeployUseAdCredentials = ChkAdCreds.IsChecked == true;
 
         c.TaskMaxParallel = Int(TxtParallel, c.TaskMaxParallel);

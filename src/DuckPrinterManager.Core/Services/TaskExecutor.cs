@@ -67,6 +67,7 @@ public sealed class TaskExecutor(PowerShellRunner ps, Func<AppConfig> config, Fu
                     p.DefaultMode,
                     p.RestartSetPrt,
                     p.DriverOnly,
+                    cfg.TrustDriverPublisher,
                     cfg.SetPrtPaths,
                     cfg.SetPrtBatch,
                     cfg.SetPrtProcess,

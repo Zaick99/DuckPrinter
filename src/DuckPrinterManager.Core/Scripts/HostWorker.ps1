@@ -78,6 +78,7 @@ try {
         Write-DuckLog 'DEBUG' "Cartella temporanea sul PC: $jobDir (task $($in.TaskId))"
         $att = @{ ok = $false; final = $null; transport = ''; errors = @(); ran = $false; denied = $false; who = $who }
         $drive = $null; $session = $null; $smbRoot = $null; $smbError = ''
+        $script:jobCreated = $false   # la cartella sul PC esiste solo se SMB o WinRM sono arrivati a crearla
 
         Write-DuckLog 'INFO' "Account: $who"
         try {
@@ -94,6 +95,7 @@ try {
                 }
                 New-Item -ItemType Directory -Path "$smbRoot\$jobId" -Force | Out-Null
                 Set-Content -LiteralPath "$smbRoot\$jobId\.duckpm" -Value ([string]$in.TaskId)
+                $script:jobCreated = $true
                 Write-DuckLog 'DEBUG' "SMB: $unc accessibile"
             } catch {
                 $smbRoot = $null
@@ -131,6 +133,7 @@ try {
                         New-Item -ItemType Directory -Path $d -Force | Out-Null
                         Set-Content -LiteralPath (Join-Path $d '.duckpm') -Value $id
                     } -ArgumentList $jobDir, ([string]$in.TaskId)
+                    $script:jobCreated = $true
                     if ($isDeploy) {
                         Write-DuckLog 'INFO' 'Invio del driver via WinRM (Copy-Item -ToSession, un solo file)'
                         Copy-Item -LiteralPath $zipLocal -Destination "$jobDir\d.zip" -ToSession $script:session -Force
@@ -209,7 +212,8 @@ Move-Item '$jobDir\result.tmp' '$jobDir\result.json' -Force
                     $gone = & $RemoveTreeBlock "$smbRoot\$jobId"
                 }
             } catch { }
-            if ($gone) { Write-DuckLog 'DEBUG' "Cartella temporanea rimossa: $jobDir" }
+            if (-not $script:jobCreated) { }   # mai creata (accesso negato): niente da togliere
+            elseif ($gone) { Write-DuckLog 'DEBUG' "Cartella temporanea rimossa: $jobDir" }
             else { Write-DuckLog 'WARN' "Cartella temporanea non rimossa ora: $jobDir (verra' tolta al prossimo task su questo PC)" }
             if ($script:session) { Remove-PSSession $script:session -ErrorAction SilentlyContinue; $script:session = $null }
             if ($drive) { Remove-PSDrive -Name $drive.Name -Force -ErrorAction SilentlyContinue }

@@ -2,6 +2,23 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.3] - 2026-11-13
+
+### Fixed
+
+- **Signed drivers that would not install on some PCs (HP Universal Printing, for one).**
+  `pnputil` stopped with `0xE0000242`: the publisher that signed the driver's catalogue was
+  not yet trusted on that PC. Installing by hand, Windows asks *"Always trust software from
+  HP?"*; over WinRM nobody can answer, so the install failed silently ("0 packages added",
+  `printui` exiting with 0 and installing nothing). Before installing, the app now adds the
+  signer of each catalogue to the PC's **Trusted Publishers** — only for valid signatures
+  that chain to a trusted root, which is what clicking *Install* does. On by default;
+  **Impostazioni › Deploy › Rendi attendibile l'editore dei driver firmati** turns it off.
+- **The `pnputil` exit codes are translated in the task log** (publisher not trusted, root
+  not trusted, unsigned driver, catalogue not matching the files, reboot required).
+- **"Temporary folder not removed" no longer appears for an account that was refused**:
+  with *access denied* the folder was never created, so there is nothing to remove.
+
 ## [2.0.2] - 2026-11-09
 
 ### Added

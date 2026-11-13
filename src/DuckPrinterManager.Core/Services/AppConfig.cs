@@ -49,6 +49,9 @@ public sealed class AppConfig
     private const string OldRemoteWorkDir = @"C:\ProgramData\DuckPM";
     public bool DeployUseAdCredentials { get; set; } = true;
     public bool CacheDrivers { get; set; } = true;
+    /// <summary>Prima di installare un driver firmato, aggiunge il suo editore agli editori attendibili
+    /// del PC: in un'installazione remota Windows non puo' chiedere "Considerare attendibile...?".</summary>
+    public bool TrustDriverPublisher { get; set; } = true;
 
     // ---- Scheduler ----
     public int TaskCheckMinutes { get; set; } = 10;

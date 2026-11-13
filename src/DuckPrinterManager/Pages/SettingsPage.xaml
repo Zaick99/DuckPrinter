@@ -207,6 +207,9 @@
             <StackPanel>
               <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkCache" Style="{StaticResource Switch}" Content="Copia i driver nella cache locale" VerticalAlignment="Center"/></Grid>
               <Rectangle Style="{StaticResource RowSep}"/>
+              <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkTrustPublisher" Style="{StaticResource Switch}" Content="Rendi attendibile l'editore dei driver firmati" VerticalAlignment="Center"
+                    ToolTip="Solo firme valide: aggiunge il certificato del produttore (HP, Canon...) agli editori attendibili del PC, come il clic su Installa"/></Grid>
+              <Rectangle Style="{StaticResource RowSep}"/>
               <Grid Style="{StaticResource FormRow}"><CheckBox x:Name="ChkAdCreds" Style="{StaticResource Switch}" Content="Prova prima con l'account AD della sessione (poi l'utente Windows)" VerticalAlignment="Center"/></Grid>
             </StackPanel>
           </Border>
